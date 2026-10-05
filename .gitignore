@@ -2,6 +2,14 @@
 target/
 *.class
 
+# Local standalone Tomcat and runtime logs
+tomcat/
+*.log
+
+# Sensitive credentials
+db.env
+cookies.txt
+
 # IDE and OS files
 .idea/
 *.iml
@@ -9,6 +17,6 @@ target/
 .DS_Store
 Thumbs.db
 
-# Keep lib/ and webapp/WEB-INF/lib/
+# Keep dependencies
 !lib/*.jar
 !src/main/webapp/WEB-INF/lib/*.jar
