@@ -24,6 +24,30 @@ public class DatabaseConnection {
         } catch (ClassNotFoundException e) {
             System.err.println("[DatabaseConnection] MySQL Driver not found: " + e.getMessage());
         }
+
+        // Optional local convenience: Load db.env if present
+        try {
+            java.io.File[] candidates = new java.io.File[] {
+                new java.io.File("db.env"),
+                new java.io.File("../db.env"),
+                new java.io.File(System.getProperty("catalina.base", "."), "db.env"),
+                new java.io.File(System.getProperty("catalina.base", "."), "../db.env")
+            };
+            for (java.io.File envFile : candidates) {
+                if (envFile.exists() && envFile.isFile()) {
+                    java.util.Properties props = new java.util.Properties();
+                    try (java.io.FileInputStream fis = new java.io.FileInputStream(envFile)) {
+                        props.load(fis);
+                        for (String key : props.stringPropertyNames()) {
+                            if (System.getProperty(key) == null) {
+                                System.setProperty(key, props.getProperty(key).trim());
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        } catch (Exception ignored) {}
     }
 
     /**
