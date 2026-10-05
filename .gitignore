@@ -1,0 +1,14 @@
+# Build and target output
+target/
+*.class
+
+# IDE and OS files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Keep lib/ and webapp/WEB-INF/lib/
+!lib/*.jar
+!src/main/webapp/WEB-INF/lib/*.jar
