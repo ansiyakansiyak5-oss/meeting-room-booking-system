@@ -1,0 +1,92 @@
+05-Oct-2026 19:45:23.574 SEVERE [http-nio-8080-exec-6] org.apache.catalina.core.StandardWrapperValve.invoke Servlet.service() for servlet [jsp] in context with path [] threw exception [org.apache.jasper.JasperException: Unable to compile class for JSP: 
+
+An error occurred at line: [3] in the jsp file: [/navbar.jsp]
+Duplicate local variable currentUser
+1: <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+2: <%
+3:     String currentUser = (String) session.getAttribute("user");
+4:     String currentUri = request.getRequestURI();
+5: %>
+6: <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+
+
+Stacktrace:] with root cause
+	org.apache.jasper.JasperException: Unable to compile class for JSP: 
+
+An error occurred at line: [3] in the jsp file: [/navbar.jsp]
+Duplicate local variable currentUser
+1: <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+2: <%
+3:     String currentUser = (String) session.getAttribute("user");
+4:     String currentUri = request.getRequestURI();
+5: %>
+6: <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+
+
+Stacktrace:
+		at org.apache.jasper.compiler.DefaultErrorHandler.javacError(DefaultErrorHandler.java:70)
+		at org.apache.jasper.compiler.ErrorDispatcher.javacError(ErrorDispatcher.java:189)
+		at org.apache.jasper.compiler.JDTCompiler.generateClass(JDTCompiler.java:593)
+		at org.apache.jasper.compiler.Compiler.compile(Compiler.java:408)
+		at org.apache.jasper.compiler.Compiler.compile(Compiler.java:380)
+		at org.apache.jasper.compiler.Compiler.compile(Compiler.java:366)
+		at org.apache.jasper.JspCompilationContext.compile(JspCompilationContext.java:736)
+		at org.apache.jasper.servlet.JspServletWrapper.service(JspServletWrapper.java:441)
+		at org.apache.jasper.servlet.JspServlet.serviceJspFile(JspServlet.java:359)
+		at org.apache.jasper.servlet.JspServlet.service(JspServlet.java:310)
+		at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+		at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:197)
+		at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:142)
+		at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:57)
+		at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:166)
+		at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:142)
+		at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:166)
+		at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:88)
+		at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:540)
+		at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+		at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:86)
+		at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:782)
+		at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:71)
+		at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:348)
+		at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:410)
+		at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:71)
+		at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:1307)
+		at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:2197)
+		at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:74)
+		at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:976)
+		at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:494)
+		at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:80)
+		at java.base/java.lang.Thread.run(Thread.java:1447)
+05-Oct-2026 19:45:24.459 SEVERE [http-nio-8080-exec-8] org.apache.catalina.core.StandardWrapperValve.invoke Servlet.service() for servlet [jsp] in context with path [] threw exception [org.apache.jasper.JasperException: java.lang.ClassNotFoundException: org.apache.jsp.dashboard_jsp] with root cause
+	java.lang.ClassNotFoundException: org.apache.jsp.dashboard_jsp
+		at java.base/java.net.URLClassLoader.findClass(URLClassLoader.java:349)
+		at org.apache.jasper.servlet.JasperLoader.loadClass(JasperLoader.java:116)
+		at org.apache.jasper.servlet.JasperLoader.loadClass(JasperLoader.java:53)
+		at org.apache.catalina.core.DefaultInstanceManager.newInstance(DefaultInstanceManager.java:186)
+		at org.apache.jasper.servlet.JspServletWrapper.getServlet(JspServletWrapper.java:196)
+		at org.apache.jasper.servlet.JspServletWrapper.service(JspServletWrapper.java:455)
+		at org.apache.jasper.servlet.JspServlet.serviceJspFile(JspServlet.java:359)
+		at org.apache.jasper.servlet.JspServlet.service(JspServlet.java:310)
+		at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+		at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:197)
+		at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:142)
+		at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:57)
+		at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:166)
+		at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:142)
+		at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:166)
+		at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:88)
+		at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:540)
+		at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+		at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:86)
+		at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:782)
+		at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:71)
+		at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:348)
+		at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:410)
+		at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:71)
+		at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:1307)
+		at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:2197)
+		at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:74)
+		at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:976)
+		at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:494)
+		at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:80)
+		at java.base/java.lang.Thread.run(Thread.java:1447)
