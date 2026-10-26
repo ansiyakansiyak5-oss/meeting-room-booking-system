@@ -153,11 +153,10 @@ public class DatabaseConnection {
         }
 
         // Build JDBC URL
-        // Aiven MySQL requires SSL.
         String jdbcUrl;
         if (isAivenOrCloud && !host.equalsIgnoreCase("localhost")) {
             jdbcUrl = String.format(
-                "jdbc:mysql://%s:%s/%s?ssl-mode=REQUIRED&useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=UTC",
+                "jdbc:mysql://%s:%s/%s?sslMode=PREFERRED&useSSL=true&allowPublicKeyRetrieval=true&autoReconnect=true&connectTimeout=10000&socketTimeout=30000&serverTimezone=UTC",
                 host, port, dbName
             );
         } else {
@@ -167,7 +166,16 @@ public class DatabaseConnection {
             );
         }
 
-        Connection conn = DriverManager.getConnection(jdbcUrl, user, password);
+        Connection conn;
+        try {
+            conn = DriverManager.getConnection(jdbcUrl, user, password);
+        } catch (SQLException e) {
+            // Provide exact diagnostic detail so host, port, user and DB can be verified instantly
+            throw new SQLException(
+                String.format("Unable to connect to MySQL at [%s:%s/%s] with user '%s': %s", host, port, dbName, user, e.getMessage()),
+                e
+            );
+        }
 
         // Ensure tables exist on first successful connection
         if (!isInitialized) {
