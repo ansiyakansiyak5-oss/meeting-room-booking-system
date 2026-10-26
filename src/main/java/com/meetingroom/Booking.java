@@ -13,20 +13,29 @@ public class Booking implements Serializable {
     private String employeeName;
     private String employeeId;
     private String department;
+    private String userType;    // 'Student', 'Employee', 'Faculty', 'Student Club'
     private String meetingTitle;
     private String meetingDate; // YYYY-MM-DD
     private String startTime;   // HH:MM
     private String endTime;     // HH:MM
     private int participants;
     private String purpose;
+    private double totalAmount;
+    private String paymentMethod; // 'Online - UPI / Card', 'Offline - Pay at Desk'
+    private String paymentStatus; // 'Paid', 'Pending'
     private String bookingStatus; // 'Booked', 'Cancelled', 'Completed'
 
-    public Booking() {}
+    public Booking() {
+        this.userType = "Employee";
+        this.paymentMethod = "Offline";
+        this.paymentStatus = "Pending";
+        this.bookingStatus = "Booked";
+    }
 
     public Booking(int bookingId, String bookingNumber, int roomId, String roomNumber, String roomName,
-                   String employeeName, String employeeId, String department, String meetingTitle,
+                   String employeeName, String employeeId, String department, String userType, String meetingTitle,
                    String meetingDate, String startTime, String endTime, int participants,
-                   String purpose, String bookingStatus) {
+                   String purpose, double totalAmount, String paymentMethod, String paymentStatus, String bookingStatus) {
         this.bookingId = bookingId;
         this.bookingNumber = bookingNumber;
         this.roomId = roomId;
@@ -35,13 +44,26 @@ public class Booking implements Serializable {
         this.employeeName = employeeName;
         this.employeeId = employeeId;
         this.department = department;
+        this.userType = (userType != null && !userType.isEmpty()) ? userType : "Employee";
         this.meetingTitle = meetingTitle;
         this.meetingDate = meetingDate;
         this.startTime = startTime;
         this.endTime = endTime;
         this.participants = participants;
         this.purpose = purpose;
+        this.totalAmount = totalAmount;
+        this.paymentMethod = (paymentMethod != null && !paymentMethod.isEmpty()) ? paymentMethod : "Offline";
+        this.paymentStatus = (paymentStatus != null && !paymentStatus.isEmpty()) ? paymentStatus : "Pending";
         this.bookingStatus = bookingStatus;
+    }
+
+    // Overload for backward compatibility
+    public Booking(int bookingId, String bookingNumber, int roomId, String roomNumber, String roomName,
+                   String employeeName, String employeeId, String department, String meetingTitle,
+                   String meetingDate, String startTime, String endTime, int participants,
+                   String purpose, String bookingStatus) {
+        this(bookingId, bookingNumber, roomId, roomNumber, roomName, employeeName, employeeId, department,
+             "Employee", meetingTitle, meetingDate, startTime, endTime, participants, purpose, 0.00, "Offline", "Pending", bookingStatus);
     }
 
     public int getBookingId() { return bookingId; }
@@ -68,6 +90,9 @@ public class Booking implements Serializable {
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
 
+    public String getUserType() { return userType; }
+    public void setUserType(String userType) { this.userType = userType; }
+
     public String getMeetingTitle() { return meetingTitle; }
     public void setMeetingTitle(String meetingTitle) { this.meetingTitle = meetingTitle; }
 
@@ -85,6 +110,15 @@ public class Booking implements Serializable {
 
     public String getPurpose() { return purpose; }
     public void setPurpose(String purpose) { this.purpose = purpose; }
+
+    public double getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
 
     public String getBookingStatus() { return bookingStatus; }
     public void setBookingStatus(String bookingStatus) { this.bookingStatus = bookingStatus; }

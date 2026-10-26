@@ -29,23 +29,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking Slip - <%= booking.getBookingNumber() %></title>
+    <title>Booking Invoice - <%= booking.getBookingNumber() %></title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="<%= request.getContextPath() %>/css/style.css" rel="stylesheet">
+    <!-- Custom CSS (with cache buster) -->
+    <link href="<%= request.getContextPath() %>/css/style.css?v=3.1" rel="stylesheet">
 </head>
 <body>
 
-    <!-- Header Navigation (Hidden on Print) -->
-    <div class="no-print">
-        <%@ include file="navbar.jsp" %>
-    </div>
+    <!-- Left Main Menu Sidebar & Mobile Navigation -->
+    <%@ include file="sidebar.jsp" %>
 
     <div class="main-content py-4">
-        <div class="container">
+        <div class="container-fluid">
 
             <!-- Success Notification (Hidden on Print) -->
             <% if ("true".equals(isNew)) { %>
@@ -53,8 +51,8 @@
                     <div class="d-flex align-items-center">
                         <i class="bi bi-check-circle-fill fs-3 me-3 text-success"></i>
                         <div>
-                            <h5 class="alert-heading fw-bold mb-0">Booking Confirmed Successfully!</h5>
-                            <div class="small">Your meeting room has been reserved. You can print or download this receipt below.</div>
+                            <h5 class="alert-heading fw-bold mb-0">Booking &amp; Reservation Confirmed!</h5>
+                            <div class="small">Your meeting room has been locked with zero double-booking risk. Payment invoice and receipt generated below.</div>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -65,7 +63,7 @@
                         <i class="bi bi-info-circle-fill fs-3 me-3 text-info"></i>
                         <div>
                             <h5 class="alert-heading fw-bold mb-0">Reservation Updated Successfully</h5>
-                            <div class="small">Changes to your reservation have been saved.</div>
+                            <div class="small">Changes to your meeting schedule have been saved.</div>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -81,10 +79,10 @@
                     <a href="<%= request.getContextPath() %>/receipt?bookingId=<%= booking.getBookingId() %>&download=txt" class="btn btn-outline-primary">
                         <i class="bi bi-file-earmark-arrow-down me-1"></i> Save as .txt
                     </a>
-                    <button type="button" class="btn btn-primary" onclick="window.print();">
+                    <button type="button" class="btn btn-primary shadow-sm" onclick="window.print();">
                         <i class="bi bi-printer me-1"></i> Print Receipt
                     </button>
-                    <a href="<%= request.getContextPath() %>/bookings" class="btn btn-success">
+                    <a href="<%= request.getContextPath() %>/bookings" class="btn btn-success shadow-sm">
                         <i class="bi bi-plus-lg me-1"></i> New Booking
                     </a>
                 </div>
@@ -93,20 +91,31 @@
             <!-- Receipt Container (Screen & Print Ready) -->
             <div class="receipt-container">
 
+                <!-- Room Picture Banner -->
+                <div class="mb-4 overflow-hidden rounded-3 border shadow-sm position-relative">
+                    <img src="<%= request.getContextPath() %>/images/meeting-room-hero.jpg" alt="Meeting Room" class="w-100" style="height: 200px; object-fit: cover;">
+                    <div class="position-absolute bottom-0 start-0 end-0 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);">
+                        <h4 class="text-white fw-bold mb-0"><%= (room != null) ? room.getRoomName() : booking.getRoomName() %></h4>
+                        <small class="text-white-50"><i class="bi bi-geo-alt me-1"></i><%= (room != null) ? (room.getBuilding() + " (" + room.getFloor() + ")") : "Main Campus" %></small>
+                    </div>
+                </div>
+
                 <!-- Receipt Header -->
                 <div class="receipt-header text-center">
                     <div class="d-flex align-items-center justify-content-center mb-2">
-                        <i class="bi bi-building-check text-primary fs-2 me-2"></i>
-                        <h3 class="fw-bold mb-0 text-dark">MEETING ROOM RESERVATION SLIP</h3>
+                        <div class="brand-icon rounded-3 d-flex align-items-center justify-content-center text-white me-2" style="width: 36px; height: 36px; background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+                            <i class="bi bi-building-check fs-5"></i>
+                        </div>
+                        <h3 class="fw-bold mb-0">MEETING ROOM OFFICIAL RECEIPT</h3>
                     </div>
-                    <div class="text-muted small">Corporate Facilities Management &bull; Official Confirmation</div>
+                    <div class="text-muted small">Campus &amp; Corporate Facilities Management &bull; Instant Confirmation Slip</div>
                     <div class="mt-3">
                         <span class="receipt-ref-badge fw-bold"><%= booking.getBookingNumber() %></span>
                     </div>
                 </div>
 
                 <!-- Status Banner -->
-                <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded mb-4 border">
+                <div class="d-flex justify-content-between align-items-center bg-secondary bg-opacity-10 p-3 rounded-3 mb-4 border">
                     <div>
                         <span class="text-muted small text-uppercase fw-semibold d-block">Reservation Status</span>
                         <% if ("Booked".equalsIgnoreCase(booking.getBookingStatus())) { %>
@@ -119,7 +128,40 @@
                     </div>
                     <div class="text-end">
                         <span class="text-muted small text-uppercase fw-semibold d-block">Reserved On</span>
-                        <strong class="text-dark"><%= booking.getMeetingDate() %></strong>
+                        <strong><%= booking.getMeetingDate() %></strong>
+                    </div>
+                </div>
+
+                <!-- Section: Payment & Billing Invoice -->
+                <div class="mb-4 p-3 rounded-3 border bg-secondary bg-opacity-10">
+                    <h6 class="text-uppercase text-primary fw-bold border-bottom pb-2 mb-3">
+                        <i class="bi bi-cash-stack me-2"></i>Payment &amp; Billing Breakdown
+                    </h6>
+                    <div class="row g-3 align-items-center">
+                        <div class="col-sm-3">
+                            <label class="text-muted small fw-semibold d-block">Total Billed</label>
+                            <h3 class="fw-bold text-success mb-0">$<%= String.format("%.2f", booking.getTotalAmount()) %></h3>
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="text-muted small fw-semibold d-block">Payment Method</label>
+                            <div class="fw-semibold"><%= booking.getPaymentMethod() %></div>
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="text-muted small fw-semibold d-block">Payment Status</label>
+                            <div>
+                                <% if ("Paid".equalsIgnoreCase(booking.getPaymentStatus())) { %>
+                                    <span class="badge bg-success fs-6"><i class="bi bi-check-all me-1"></i>PAID IN FULL</span>
+                                <% } else { %>
+                                    <span class="badge bg-warning text-dark fs-6"><i class="bi bi-clock-history me-1"></i>PAY AT RECEPTION DESK</span>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="text-muted small fw-semibold d-block">User Category</label>
+                            <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25 fs-6">
+                                <%= booking.getUserType() != null ? booking.getUserType() : "General" %>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -131,24 +173,24 @@
                     <div class="row g-3">
                         <div class="col-sm-12">
                             <label class="text-muted small fw-semibold d-block">Meeting Title</label>
-                            <h5 class="fw-bold text-dark mb-0"><%= booking.getMeetingTitle() %></h5>
+                            <h5 class="fw-bold mb-0"><%= booking.getMeetingTitle() %></h5>
                         </div>
                         <div class="col-sm-4">
                             <label class="text-muted small fw-semibold d-block">Date</label>
-                            <div class="fw-semibold text-dark"><i class="bi bi-calendar3 me-1 text-primary"></i><%= booking.getMeetingDate() %></div>
+                            <div class="fw-semibold"><i class="bi bi-calendar3 me-1 text-primary"></i><%= booking.getMeetingDate() %></div>
                         </div>
                         <div class="col-sm-4">
                             <label class="text-muted small fw-semibold d-block">Time Slot</label>
-                            <div class="fw-semibold text-dark"><i class="bi bi-clock me-1 text-primary"></i><%= booking.getStartTime().substring(0, 5) %> to <%= booking.getEndTime().substring(0, 5) %></div>
+                            <div class="fw-semibold"><i class="bi bi-clock me-1 text-primary"></i><%= booking.getStartTime().substring(0, 5) %> to <%= booking.getEndTime().substring(0, 5) %></div>
                         </div>
                         <div class="col-sm-4">
                             <label class="text-muted small fw-semibold d-block">Participants</label>
-                            <div class="fw-semibold text-dark"><i class="bi bi-people me-1 text-primary"></i><%= booking.getParticipants() %> Persons</div>
+                            <div class="fw-semibold"><i class="bi bi-people me-1 text-primary"></i><%= booking.getParticipants() %> Persons</div>
                         </div>
                         <% if (booking.getPurpose() != null && !booking.getPurpose().isEmpty()) { %>
                             <div class="col-12">
                                 <label class="text-muted small fw-semibold d-block">Agenda / Purpose</label>
-                                <div class="p-2 bg-light rounded text-secondary border small"><%= booking.getPurpose() %></div>
+                                <div class="p-2 bg-secondary bg-opacity-10 rounded border small"><%= booking.getPurpose() %></div>
                             </div>
                         <% } %>
                     </div>
@@ -162,20 +204,24 @@
                     <div class="row g-3">
                         <div class="col-sm-6">
                             <label class="text-muted small fw-semibold d-block">Room Name</label>
-                            <div class="fw-bold fs-6 text-dark"><%= (room != null) ? room.getRoomName() : booking.getRoomName() %></div>
+                            <div class="fw-bold fs-6"><%= (room != null) ? room.getRoomName() : booking.getRoomName() %></div>
                         </div>
                         <div class="col-sm-6">
                             <label class="text-muted small fw-semibold d-block">Room Number</label>
-                            <div class="font-monospace fw-bold text-dark"><%= (room != null) ? room.getRoomNumber() : booking.getRoomNumber() %></div>
+                            <div class="font-monospace fw-bold"><%= (room != null) ? room.getRoomNumber() : booking.getRoomNumber() %></div>
                         </div>
                         <% if (room != null) { %>
-                            <div class="col-sm-6">
+                            <div class="col-sm-4">
                                 <label class="text-muted small fw-semibold d-block">Location</label>
                                 <div><%= room.getBuilding() %>, <%= room.getFloor() %></div>
                             </div>
-                            <div class="col-sm-6">
+                            <div class="col-sm-4">
                                 <label class="text-muted small fw-semibold d-block">Facility Type &amp; Capacity</label>
-                                <div><%= room.getRoomType() %> &bull; <%= room.getCapacity() %> Seats Max</div>
+                                <div><%= room.getRoomType() %> &bull; <%= room.getCapacity() %> Seats</div>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="text-muted small fw-semibold d-block">Hourly Rate</label>
+                                <div class="fw-bold text-success">$<%= String.format("%.2f", room.getHourlyRate()) %>/hr</div>
                             </div>
                             <div class="col-12">
                                 <label class="text-muted small fw-semibold d-block">Included Amenities</label>
@@ -192,15 +238,15 @@
                     </h6>
                     <div class="row g-3">
                         <div class="col-sm-4">
-                            <label class="text-muted small fw-semibold d-block">Employee Name</label>
-                            <div class="fw-semibold text-dark"><%= booking.getEmployeeName() %></div>
+                            <label class="text-muted small fw-semibold d-block">Organizer Name</label>
+                            <div class="fw-semibold"><%= booking.getEmployeeName() %></div>
                         </div>
                         <div class="col-sm-4">
-                            <label class="text-muted small fw-semibold d-block">Employee ID</label>
-                            <div class="font-monospace text-dark"><%= booking.getEmployeeId() %></div>
+                            <label class="text-muted small fw-semibold d-block">ID / Roll No.</label>
+                            <div class="font-monospace"><%= booking.getEmployeeId() %></div>
                         </div>
                         <div class="col-sm-4">
-                            <label class="text-muted small fw-semibold d-block">Department</label>
+                            <label class="text-muted small fw-semibold d-block">Department / Club</label>
                             <div><%= (booking.getDepartment() != null && !booking.getDepartment().isEmpty()) ? booking.getDepartment() : "General" %></div>
                         </div>
                     </div>
@@ -209,10 +255,10 @@
                 <!-- Receipt Footer -->
                 <div class="receipt-footer text-center">
                     <p class="text-muted small mb-1">
-                        <i class="bi bi-shield-check me-1"></i>Please bring this confirmation receipt when accessing the conference room.
+                        <i class="bi bi-shield-check me-1"></i>Please bring this confirmation receipt when occupying the meeting room.
                     </p>
                     <p class="text-muted small mb-0">
-                        Generated automatically by MeetRoom Pro &bull; Cloud Database Powered by Aiven MySQL
+                        Generated automatically by MeetRoom Pro &bull; Cloud Database Powered by MySQL
                     </p>
                 </div>
 
@@ -223,6 +269,6 @@
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="<%= request.getContextPath() %>/js/script.js"></script>
+    <script src="<%= request.getContextPath() %>/js/script.js?v=3.1"></script>
 </body>
 </html>

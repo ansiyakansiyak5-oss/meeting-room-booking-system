@@ -44,7 +44,7 @@ public class BookingServlet extends HttpServlet {
             return;
         }
 
-        // Load available rooms for dropdown
+        // Load available rooms for dropdown with hourly rate
         List<Room> rooms = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
@@ -59,6 +59,7 @@ public class BookingServlet extends HttpServlet {
                         rs.getInt("capacity"),
                         rs.getString("room_type"),
                         rs.getString("facilities"),
+                        rs.getDouble("hourly_rate"),
                         rs.getString("status")
                 );
                 rooms.add(r);
@@ -85,12 +86,16 @@ public class BookingServlet extends HttpServlet {
                                 rs.getString("employee_name"),
                                 rs.getString("employee_id"),
                                 rs.getString("department"),
+                                rs.getString("user_type"),
                                 rs.getString("meeting_title"),
                                 rs.getString("meeting_date"),
                                 rs.getString("start_time"),
                                 rs.getString("end_time"),
                                 rs.getInt("participants"),
                                 rs.getString("purpose"),
+                                rs.getDouble("total_amount"),
+                                rs.getString("payment_method"),
+                                rs.getString("payment_status"),
                                 rs.getString("booking_status")
                         );
                         request.setAttribute("editBooking", b);
@@ -133,14 +138,15 @@ public class BookingServlet extends HttpServlet {
         String employeeName = request.getParameter("employeeName");
         String employeeId = request.getParameter("employeeId");
         String department = request.getParameter("department");
+        String userType = request.getParameter("userType");
         String meetingTitle = request.getParameter("meetingTitle");
         String meetingDateStr = request.getParameter("meetingDate");
         String startTimeStr = request.getParameter("startTime");
         String endTimeStr = request.getParameter("endTime");
         String participantsStr = request.getParameter("participants");
         String purpose = request.getParameter("purpose");
+        String paymentMethod = request.getParameter("paymentMethod");
 
-        // Basic validation
         if (roomIdStr == null || roomIdStr.trim().isEmpty() ||
             employeeName == null || employeeName.trim().isEmpty() ||
             employeeId == null || employeeId.trim().isEmpty() ||
@@ -163,7 +169,6 @@ public class BookingServlet extends HttpServlet {
             return;
         }
 
-        // Format times to HH:mm:ss if only HH:mm provided
         String startTime = normalizeTime(startTimeStr.trim());
         String endTime = normalizeTime(endTimeStr.trim());
 
@@ -172,12 +177,18 @@ public class BookingServlet extends HttpServlet {
             return;
         }
 
+        if (userType == null || userType.trim().isEmpty()) userType = "Student";
+        if (paymentMethod == null || paymentMethod.trim().isEmpty()) paymentMethod = "Offline";
+
+        String paymentStatus = paymentMethod.toLowerCase().contains("online") ? "Paid" : "Pending";
+
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Check room capacity & details
-            String roomQuery = "SELECT room_number, room_name, capacity, status FROM rooms WHERE room_id = ?";
+            // Check room capacity, details, and hourly rate
+            String roomQuery = "SELECT room_number, room_name, capacity, hourly_rate, status FROM rooms WHERE room_id = ?";
             String roomNumber = "";
             String roomName = "";
             int capacity = 0;
+            double hourlyRate = 15.00;
             String roomStatus = "";
 
             try (PreparedStatement ps = conn.prepareStatement(roomQuery)) {
@@ -187,6 +198,7 @@ public class BookingServlet extends HttpServlet {
                         roomNumber = rs.getString("room_number");
                         roomName = rs.getString("room_name");
                         capacity = rs.getInt("capacity");
+                        hourlyRate = rs.getDouble("hourly_rate");
                         roomStatus = rs.getString("status");
                     } else {
                         redirectWithError(request, response, "Selected room does not exist.", false, null);
@@ -236,14 +248,22 @@ public class BookingServlet extends HttpServlet {
                 }
             }
 
+            // Calculate total price based on duration and user role (with student discount)
+            double hours = calculateHours(startTime, endTime);
+            double totalAmount = hours * hourlyRate;
+            if ("Student".equalsIgnoreCase(userType) || "Student Club".equalsIgnoreCase(userType)) {
+                totalAmount = totalAmount * 0.80; // 20% Student Special Subsidy
+            }
+            totalAmount = Math.round(totalAmount * 100.0) / 100.0;
+
             // Generate Booking Number
             String bookingNumber = generateBookingNumber();
 
-            // Insert Booking
+            // Insert Booking with Pricing & Payment
             String insertSql = "INSERT INTO bookings " +
-                    "(booking_number, room_id, room_number, room_name, employee_name, employee_id, department, " +
-                    " meeting_title, meeting_date, start_time, end_time, participants, purpose, booking_status) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Booked')";
+                    "(booking_number, room_id, room_number, room_name, employee_name, employee_id, department, user_type, " +
+                    " meeting_title, meeting_date, start_time, end_time, participants, purpose, total_amount, payment_method, payment_status, booking_status) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Booked')";
 
             int newBookingId = 0;
             try (PreparedStatement ps = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
@@ -254,12 +274,16 @@ public class BookingServlet extends HttpServlet {
                 ps.setString(5, employeeName.trim());
                 ps.setString(6, employeeId.trim());
                 ps.setString(7, department != null ? department.trim() : "");
-                ps.setString(8, meetingTitle.trim());
-                ps.setDate(9, Date.valueOf(meetingDateStr.trim()));
-                ps.setTime(10, Time.valueOf(startTime));
-                ps.setTime(11, Time.valueOf(endTime));
-                ps.setInt(12, participants);
-                ps.setString(13, purpose != null ? purpose.trim() : "");
+                ps.setString(8, userType.trim());
+                ps.setString(9, meetingTitle.trim());
+                ps.setDate(10, Date.valueOf(meetingDateStr.trim()));
+                ps.setTime(11, Time.valueOf(startTime));
+                ps.setTime(12, Time.valueOf(endTime));
+                ps.setInt(13, participants);
+                ps.setString(14, purpose != null ? purpose.trim() : "");
+                ps.setDouble(15, totalAmount);
+                ps.setString(16, paymentMethod.trim());
+                ps.setString(17, paymentStatus.trim());
 
                 ps.executeUpdate();
 
@@ -270,7 +294,7 @@ public class BookingServlet extends HttpServlet {
                 }
             }
 
-            // Redirect directly to the Receipt page for immediate confirmation & printing
+            // Redirect directly to the Receipt page for immediate confirmation & receipt
             response.sendRedirect(request.getContextPath() + "/receipt?bookingId=" + newBookingId + "&new=true");
 
         } catch (SQLException e) {
@@ -286,12 +310,15 @@ public class BookingServlet extends HttpServlet {
         String employeeName = request.getParameter("employeeName");
         String employeeId = request.getParameter("employeeId");
         String department = request.getParameter("department");
+        String userType = request.getParameter("userType");
         String meetingTitle = request.getParameter("meetingTitle");
         String meetingDateStr = request.getParameter("meetingDate");
         String startTimeStr = request.getParameter("startTime");
         String endTimeStr = request.getParameter("endTime");
         String participantsStr = request.getParameter("participants");
         String purpose = request.getParameter("purpose");
+        String paymentMethod = request.getParameter("paymentMethod");
+        String paymentStatus = request.getParameter("paymentStatus");
         String bookingStatus = request.getParameter("bookingStatus");
 
         if (bookingIdStr == null || bookingIdStr.trim().isEmpty()) {
@@ -312,17 +339,19 @@ public class BookingServlet extends HttpServlet {
         }
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Get Room Details
+            // Get Room Details & Rate
             String roomNumber = "";
             String roomName = "";
             int capacity = 0;
-            try (PreparedStatement ps = conn.prepareStatement("SELECT room_number, room_name, capacity FROM rooms WHERE room_id = ?")) {
+            double hourlyRate = 15.00;
+            try (PreparedStatement ps = conn.prepareStatement("SELECT room_number, room_name, capacity, hourly_rate FROM rooms WHERE room_id = ?")) {
                 ps.setInt(1, roomId);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
                         roomNumber = rs.getString("room_number");
                         roomName = rs.getString("room_name");
                         capacity = rs.getInt("capacity");
+                        hourlyRate = rs.getDouble("hourly_rate");
                     }
                 }
             }
@@ -332,7 +361,7 @@ public class BookingServlet extends HttpServlet {
                 return;
             }
 
-            // CRITICAL CONFLICT DETECTION (Exclude current booking)
+            // Conflict detection excluding current booking
             String conflictQuery = "SELECT booking_number, meeting_title, employee_name, start_time, end_time " +
                     "FROM bookings " +
                     "WHERE room_id = ? " +
@@ -364,10 +393,16 @@ public class BookingServlet extends HttpServlet {
                 }
             }
 
-            // Update Booking
+            double hours = calculateHours(startTime, endTime);
+            double totalAmount = hours * hourlyRate;
+            if ("Student".equalsIgnoreCase(userType) || "Student Club".equalsIgnoreCase(userType)) {
+                totalAmount = totalAmount * 0.80;
+            }
+            totalAmount = Math.round(totalAmount * 100.0) / 100.0;
+
             String updateSql = "UPDATE bookings SET room_id = ?, room_number = ?, room_name = ?, " +
-                    "employee_name = ?, employee_id = ?, department = ?, meeting_title = ?, meeting_date = ?, " +
-                    "start_time = ?, end_time = ?, participants = ?, purpose = ?, booking_status = ? " +
+                    "employee_name = ?, employee_id = ?, department = ?, user_type = ?, meeting_title = ?, meeting_date = ?, " +
+                    "start_time = ?, end_time = ?, participants = ?, purpose = ?, total_amount = ?, payment_method = ?, payment_status = ?, booking_status = ? " +
                     "WHERE booking_id = ?";
 
             try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
@@ -377,14 +412,18 @@ public class BookingServlet extends HttpServlet {
                 ps.setString(4, employeeName.trim());
                 ps.setString(5, employeeId.trim());
                 ps.setString(6, department != null ? department.trim() : "");
-                ps.setString(7, meetingTitle.trim());
-                ps.setDate(8, Date.valueOf(meetingDateStr.trim()));
-                ps.setTime(9, Time.valueOf(startTime));
-                ps.setTime(10, Time.valueOf(endTime));
-                ps.setInt(11, participants);
-                ps.setString(12, purpose != null ? purpose.trim() : "");
-                ps.setString(13, bookingStatus != null ? bookingStatus.trim() : "Booked");
-                ps.setInt(14, bookingId);
+                ps.setString(7, userType != null ? userType.trim() : "Student");
+                ps.setString(8, meetingTitle.trim());
+                ps.setDate(9, Date.valueOf(meetingDateStr.trim()));
+                ps.setTime(10, Time.valueOf(startTime));
+                ps.setTime(11, Time.valueOf(endTime));
+                ps.setInt(12, participants);
+                ps.setString(13, purpose != null ? purpose.trim() : "");
+                ps.setDouble(14, totalAmount);
+                ps.setString(15, paymentMethod != null ? paymentMethod.trim() : "Offline");
+                ps.setString(16, paymentStatus != null ? paymentStatus.trim() : "Pending");
+                ps.setString(17, bookingStatus != null ? bookingStatus.trim() : "Booked");
+                ps.setInt(18, bookingId);
 
                 ps.executeUpdate();
             }
@@ -433,6 +472,20 @@ public class BookingServlet extends HttpServlet {
             }
         }
         response.sendRedirect(request.getContextPath() + "/history");
+    }
+
+    private double calculateHours(String start, String end) {
+        try {
+            String[] s = start.split(":");
+            String[] e = end.split(":");
+            double startMin = Integer.parseInt(s[0]) * 60 + Integer.parseInt(s[1]);
+            double endMin = Integer.parseInt(e[0]) * 60 + Integer.parseInt(e[1]);
+            double diffMin = endMin - startMin;
+            if (diffMin <= 0) return 1.0;
+            return diffMin / 60.0;
+        } catch (Exception ex) {
+            return 1.0;
+        }
     }
 
     private String normalizeTime(String t) {

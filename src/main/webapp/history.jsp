@@ -9,7 +9,6 @@
     @SuppressWarnings("unchecked")
     List<Booking> bookings = (List<Booking>) request.getAttribute("bookings");
     if (bookings == null) {
-        // Redirect to servlet to populate
         String q = request.getQueryString();
         response.sendRedirect(request.getContextPath() + "/history" + (q != null ? "?" + q : ""));
         return;
@@ -31,29 +30,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking History - Meeting Room Booking System</title>
+    <title>Booking &amp; Invoices - MeetRoom Pro</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="<%= request.getContextPath() %>/css/style.css" rel="stylesheet">
+    <!-- Custom CSS (with cache buster) -->
+    <link href="<%= request.getContextPath() %>/css/style.css?v=3.1" rel="stylesheet">
 </head>
 <body>
 
-    <!-- Header Navigation -->
-    <%@ include file="navbar.jsp" %>
+    <!-- Main Left Sidebar & Mobile Navigation -->
+    <%@ include file="sidebar.jsp" %>
 
     <div class="main-content">
-        <div class="container-fluid px-4">
+        <div class="container-fluid">
 
             <!-- Title Header -->
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                 <div>
-                    <h2 class="fw-bold mb-1 text-dark"><i class="bi bi-clock-history text-primary me-2"></i>Booking History</h2>
-                    <p class="text-muted mb-0">Track, update, print confirmation receipts, or cancel meeting room reservations.</p>
+                    <h2 class="fw-bold mb-1"><i class="bi bi-clock-history text-primary me-2"></i>Booking History &amp; Invoices</h2>
+                    <p class="text-muted mb-0">Track bookings, payment statuses, student discounts, and download official receipts.</p>
                 </div>
-                <a href="<%= request.getContextPath() %>/bookings" class="btn btn-primary">
+                <a href="<%= request.getContextPath() %>/bookings" class="btn btn-primary shadow-sm">
                     <i class="bi bi-calendar-plus me-1"></i> New Reservation
                 </a>
             </div>
@@ -85,7 +84,7 @@
                 <form action="<%= request.getContextPath() %>/history" method="get" class="row g-2 align-items-center">
                     <div class="col-md-5 col-sm-12">
                         <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
                             <input type="text" name="search" class="form-control" placeholder="Search by Ref #, Title, Organizer, Room..." value="<%= searchQuery %>">
                         </div>
                     </div>
@@ -112,9 +111,9 @@
             </div>
 
             <!-- Booking History Table -->
-            <div class="card card-custom border-0 overflow-hidden shadow-sm">
+            <div class="card card-custom border-0 overflow-hidden shadow-sm mb-4">
                 <div class="card-header-custom d-flex justify-content-between align-items-center">
-                    <span class="fw-bold text-dark">Bookings Records (<%= bookings.size() %>)</span>
+                    <span class="fw-bold">Booking Records (<%= bookings.size() %>)</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -124,10 +123,10 @@
                                     <th>Ref #</th>
                                     <th>Meeting Title</th>
                                     <th>Room</th>
-                                    <th>Date</th>
-                                    <th>Time Slot</th>
+                                    <th>Date &amp; Slot</th>
                                     <th>Organizer</th>
-                                    <th>Attendees</th>
+                                    <th>Category</th>
+                                    <th>Amount &amp; Payment</th>
                                     <th>Status</th>
                                     <th class="text-end">Actions</th>
                                 </tr>
@@ -149,9 +148,9 @@
                                                 </a>
                                             </td>
                                             <td>
-                                                <div class="fw-semibold text-dark"><%= b.getMeetingTitle() %></div>
+                                                <div class="fw-semibold"><%= b.getMeetingTitle() %></div>
                                                 <% if (b.getPurpose() != null && !b.getPurpose().isEmpty()) { %>
-                                                    <small class="text-muted text-truncate d-inline-block" style="max-width: 200px;"><%= b.getPurpose() %></small>
+                                                    <small class="text-muted text-truncate d-inline-block" style="max-width: 180px;"><%= b.getPurpose() %></small>
                                                 <% } %>
                                             </td>
                                             <td>
@@ -159,22 +158,28 @@
                                                 <small class="text-muted"><%= b.getRoomName() %></small>
                                             </td>
                                             <td>
-                                                <i class="bi bi-calendar3 me-1 text-muted"></i><%= b.getMeetingDate() %>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-light text-dark border">
-                                                    <i class="bi bi-clock me-1 text-muted"></i>
+                                                <div><i class="bi bi-calendar3 me-1 text-muted"></i><%= b.getMeetingDate() %></div>
+                                                <small class="badge bg-secondary bg-opacity-25 text-body border">
                                                     <%= b.getStartTime().substring(0, 5) %> - <%= b.getEndTime().substring(0, 5) %>
-                                                </span>
+                                                </small>
                                             </td>
                                             <td>
                                                 <div><%= b.getEmployeeName() %></div>
                                                 <small class="text-muted"><%= b.getDepartment() != null ? b.getDepartment() : "" %> (<%= b.getEmployeeId() %>)</small>
                                             </td>
                                             <td>
-                                                <span class="badge bg-light text-secondary border">
-                                                    <i class="bi bi-people me-1"></i><%= b.getParticipants() %>
+                                                <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25">
+                                                    <%= b.getUserType() != null ? b.getUserType() : "General" %>
                                                 </span>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-success">$<%= String.format("%.2f", b.getTotalAmount()) %></div>
+                                                <div class="d-flex align-items-center gap-1 mt-1">
+                                                    <span class="badge <%= "Paid".equalsIgnoreCase(b.getPaymentStatus()) ? "bg-success" : "bg-warning text-dark" %>" style="font-size: 0.65rem;">
+                                                        <%= b.getPaymentStatus() %>
+                                                    </span>
+                                                    <small class="text-muted" style="font-size: 0.68rem;"><%= b.getPaymentMethod().contains("Online") ? "UPI/Card" : "Desk" %></small>
+                                                </div>
                                             </td>
                                             <td>
                                                 <% if ("Booked".equalsIgnoreCase(b.getBookingStatus())) { %>

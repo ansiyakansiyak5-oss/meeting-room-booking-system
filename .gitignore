@@ -9,6 +9,7 @@ tomcat/
 # Sensitive credentials
 db.env
 cookies.txt
+pro 1/
 
 # IDE and OS files
 .idea/

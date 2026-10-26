@@ -40,7 +40,7 @@ public class ReceiptServlet extends HttpServlet {
         Booking booking = null;
         Room room = null;
 
-        String sql = "SELECT b.*, r.room_number AS r_num, r.room_name AS r_name, r.building, r.floor, r.capacity, r.room_type, r.facilities, r.status AS r_status " +
+        String sql = "SELECT b.*, r.room_number AS r_num, r.room_name AS r_name, r.building, r.floor, r.capacity, r.room_type, r.facilities, r.hourly_rate, r.status AS r_status " +
                      "FROM bookings b " +
                      "JOIN rooms r ON b.room_id = r.room_id " +
                      "WHERE ";
@@ -71,12 +71,16 @@ public class ReceiptServlet extends HttpServlet {
                             rs.getString("employee_name"),
                             rs.getString("employee_id"),
                             rs.getString("department"),
+                            rs.getString("user_type"),
                             rs.getString("meeting_title"),
                             rs.getString("meeting_date"),
                             rs.getString("start_time"),
                             rs.getString("end_time"),
                             rs.getInt("participants"),
                             rs.getString("purpose"),
+                            rs.getDouble("total_amount"),
+                            rs.getString("payment_method"),
+                            rs.getString("payment_status"),
                             rs.getString("booking_status")
                     );
 
@@ -89,6 +93,7 @@ public class ReceiptServlet extends HttpServlet {
                             rs.getInt("capacity"),
                             rs.getString("room_type"),
                             rs.getString("facilities"),
+                            rs.getDouble("hourly_rate"),
                             rs.getString("r_status")
                     );
                 }
@@ -115,6 +120,12 @@ public class ReceiptServlet extends HttpServlet {
                 out.println("Date of Booking   : " + booking.getMeetingDate());
                 out.println("Time Slot         : " + booking.getStartTime() + " to " + booking.getEndTime());
                 out.println("--------------------------------------------------------------------------------");
+                out.println("PAYMENT & PRICING DETAILS");
+                out.println("Total Amount      : $" + String.format("%.2f", booking.getTotalAmount()));
+                out.println("Payment Method    : " + booking.getPaymentMethod());
+                out.println("Payment Status    : " + booking.getPaymentStatus());
+                out.println("User Category     : " + (booking.getUserType() != null ? booking.getUserType() : "General"));
+                out.println("--------------------------------------------------------------------------------");
                 out.println("MEETING DETAILS");
                 out.println("Title             : " + booking.getMeetingTitle());
                 out.println("Purpose           : " + (booking.getPurpose() != null ? booking.getPurpose() : "N/A"));
@@ -126,14 +137,16 @@ public class ReceiptServlet extends HttpServlet {
                 if (room != null) {
                     out.println("Location          : " + room.getBuilding() + " (" + room.getFloor() + ")");
                     out.println("Room Type         : " + room.getRoomType());
+                    out.println("Hourly Rate       : $" + String.format("%.2f", room.getHourlyRate()) + " / hour");
                     out.println("Capacity          : " + room.getCapacity() + " people");
                     out.println("Facilities        : " + room.getFacilities());
                 }
                 out.println("--------------------------------------------------------------------------------");
                 out.println("BOOKED BY");
-                out.println("Employee Name     : " + booking.getEmployeeName());
-                out.println("Employee ID       : " + booking.getEmployeeId());
-                out.println("Department        : " + booking.getDepartment());
+                out.println("Name              : " + booking.getEmployeeName());
+                out.println("ID / Roll No.     : " + booking.getEmployeeId());
+                out.println("Department / Club : " + booking.getDepartment());
+                out.println("User Type         : " + booking.getUserType());
                 out.println("================================================================================");
                 out.println("Please present this confirmation slip when occupying the meeting room.");
                 out.println("Generated on      : " + new java.util.Date());

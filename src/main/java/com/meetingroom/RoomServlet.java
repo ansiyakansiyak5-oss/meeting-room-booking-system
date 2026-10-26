@@ -70,6 +70,7 @@ public class RoomServlet extends HttpServlet {
                             rs.getInt("capacity"),
                             rs.getString("room_type"),
                             rs.getString("facilities"),
+                            rs.getDouble("hourly_rate"),
                             rs.getString("status")
                     );
                     rooms.add(r);
@@ -134,6 +135,12 @@ public class RoomServlet extends HttpServlet {
             return;
         }
 
+        String hourlyRateStr = request.getParameter("hourlyRate");
+        double hourlyRate = 15.00;
+        if (hourlyRateStr != null && !hourlyRateStr.trim().isEmpty()) {
+            try { hourlyRate = Double.parseDouble(hourlyRateStr.trim()); } catch (Exception ignored) {}
+        }
+
         if (status == null || status.trim().isEmpty()) {
             status = "Available";
         }
@@ -151,7 +158,7 @@ public class RoomServlet extends HttpServlet {
                 }
             }
 
-            String insertSql = "INSERT INTO rooms (room_number, room_name, building, floor, capacity, room_type, facilities, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String insertSql = "INSERT INTO rooms (room_number, room_name, building, floor, capacity, room_type, facilities, hourly_rate, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
                 ps.setString(1, roomNumber.trim());
                 ps.setString(2, roomName.trim());
@@ -160,7 +167,8 @@ public class RoomServlet extends HttpServlet {
                 ps.setInt(5, capacity);
                 ps.setString(6, roomType != null ? roomType.trim() : "Meeting Room");
                 ps.setString(7, facilities != null ? facilities.trim() : "");
-                ps.setString(8, status.trim());
+                ps.setDouble(8, hourlyRate);
+                ps.setString(9, status.trim());
                 ps.executeUpdate();
             }
 
@@ -201,6 +209,12 @@ public class RoomServlet extends HttpServlet {
             return;
         }
 
+        String hourlyRateStr = request.getParameter("hourlyRate");
+        double hourlyRate = 15.00;
+        if (hourlyRateStr != null && !hourlyRateStr.trim().isEmpty()) {
+            try { hourlyRate = Double.parseDouble(hourlyRateStr.trim()); } catch (Exception ignored) {}
+        }
+
         try (Connection conn = DatabaseConnection.getConnection()) {
             // Check for duplicate room number excluding current room
             String checkSql = "SELECT COUNT(*) FROM rooms WHERE room_number = ? AND room_id != ?";
@@ -215,7 +229,7 @@ public class RoomServlet extends HttpServlet {
                 }
             }
 
-            String updateSql = "UPDATE rooms SET room_number = ?, room_name = ?, building = ?, floor = ?, capacity = ?, room_type = ?, facilities = ?, status = ? WHERE room_id = ?";
+            String updateSql = "UPDATE rooms SET room_number = ?, room_name = ?, building = ?, floor = ?, capacity = ?, room_type = ?, facilities = ?, hourly_rate = ?, status = ? WHERE room_id = ?";
             try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                 ps.setString(1, roomNumber.trim());
                 ps.setString(2, roomName.trim());
@@ -224,8 +238,9 @@ public class RoomServlet extends HttpServlet {
                 ps.setInt(5, capacity);
                 ps.setString(6, roomType != null ? roomType.trim() : "Meeting Room");
                 ps.setString(7, facilities != null ? facilities.trim() : "");
-                ps.setString(8, status != null ? status.trim() : "Available");
-                ps.setInt(9, roomId);
+                ps.setDouble(8, hourlyRate);
+                ps.setString(9, status != null ? status.trim() : "Available");
+                ps.setInt(10, roomId);
                 ps.executeUpdate();
             }
 

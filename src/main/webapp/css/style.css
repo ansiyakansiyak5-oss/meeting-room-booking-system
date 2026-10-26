@@ -1,91 +1,228 @@
 /* =========================================================
-   MEETING ROOM BOOKING SYSTEM - CUSTOM STYLES
+   MEETING ROOM BOOKING SYSTEM - PRO THEME & SIDEBAR STYLES
    ========================================================= */
 
 :root {
     --primary-color: #2563eb;
     --primary-hover: #1d4ed8;
+    --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     --secondary-color: #475569;
     --success-color: #10b981;
     --warning-color: #f59e0b;
     --danger-color: #ef4444;
-    --dark-color: #0f172a;
-    --light-bg: #f8fafc;
+    --sidebar-width: 260px;
+    
+    /* Light Theme (Default) */
+    --body-bg: #f8fafc;
+    --content-bg: #f8fafc;
     --card-bg: #ffffff;
-    --border-color: #e2e8f0;
+    --card-border: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --sidebar-bg: #0f172a;
+    --sidebar-text: #e2e8f0;
+    --sidebar-link-active: rgba(37, 99, 235, 0.25);
+    --sidebar-border: #1e293b;
+    --input-bg: #ffffff;
+    --input-border: #cbd5e1;
+    --table-head-bg: #f1f5f9;
+}
+
+[data-bs-theme="dark"] {
+    --body-bg: #090d16;
+    --content-bg: #090d16;
+    --card-bg: #131b2e;
+    --card-border: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --sidebar-bg: #0b1120;
+    --sidebar-text: #e2e8f0;
+    --sidebar-link-active: rgba(37, 99, 235, 0.35);
+    --sidebar-border: #1e293b;
+    --input-bg: #162035;
+    --input-border: #2b3954;
+    --table-head-bg: #162035;
 }
 
 body {
-    background-color: var(--light-bg);
+    background-color: var(--body-bg);
+    color: var(--text-primary);
     font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-    color: #1e293b;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+/* =========================================================
+   SIDEBAR & LAYOUT
+   ========================================================= */
+
+.app-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    z-index: 1045;
     display: flex;
     flex-direction: column;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Navbar */
-.navbar-custom {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+.sidebar-brand {
+    background: rgba(0, 0, 0, 0.2);
+    min-height: 64px;
 }
 
-.navbar-custom .navbar-brand {
-    font-weight: 700;
-    letter-spacing: 0.5px;
+.brand-icon {
+    background: var(--primary-gradient);
 }
 
-.navbar-custom .nav-link {
+.online-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #10b981;
+    display: inline-block;
+    box-shadow: 0 0 8px #10b981;
+}
+
+.app-sidebar .nav-link {
+    color: #94a3b8;
     font-weight: 500;
-    color: #cbd5e1 !important;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
     transition: all 0.2s ease;
+    text-decoration: none;
 }
 
-.navbar-custom .nav-link:hover,
-.navbar-custom .nav-link.active {
-    color: #ffffff !important;
-    background-color: rgba(255, 255, 255, 0.1);
+.app-sidebar .nav-link:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.08);
 }
 
-/* Main Container */
+.app-sidebar .nav-link.active {
+    color: #ffffff;
+    background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.app-sidebar .nav-link i {
+    font-size: 1.15rem;
+    opacity: 0.9;
+}
+
+.perk-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-footer {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+/* Mobile Topbar */
+.mobile-topbar {
+    background-color: var(--card-bg);
+    border-color: var(--card-border) !important;
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+}
+
+/* Overlay for mobile drawer */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 1042;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.sidebar-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Main Content Area */
 .main-content {
     flex: 1 0 auto;
-    padding: 2rem 0;
+    padding: 1.5rem 1rem;
+    transition: margin-left 0.3s ease;
+    background-color: var(--content-bg);
+    min-height: 100vh;
 }
 
-/* Cards */
+@media (min-width: 992px) {
+    .main-content {
+        margin-left: var(--sidebar-width);
+        padding: 2rem 2.5rem;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .app-sidebar {
+        transform: translateX(-100%);
+    }
+    .app-sidebar.show {
+        transform: translateX(0);
+    }
+}
+
+/* =========================================================
+   CARDS & COMPONENTS
+   ========================================================= */
+
 .card-custom {
     background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--card-border);
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .card-custom {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .card-custom:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .card-header-custom {
-    background: #ffffff;
-    border-bottom: 1px solid var(--border-color);
-    padding: 1.25rem 1.5rem;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--card-border);
+    padding: 1.15rem 1.5rem;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     border-top-left-radius: 12px !important;
     border-top-right-radius: 12px !important;
+    color: var(--text-primary);
 }
 
-/* Stat Cards on Dashboard */
+/* Stat Cards */
 .stat-card {
     border-radius: 12px;
     padding: 1.5rem;
-    background: #ffffff;
-    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     transition: all 0.2s ease;
+    color: var(--text-primary);
 }
 
 .stat-card:hover {
@@ -99,8 +236,52 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 1.5rem;
+}
+
+/* Form Controls with Theme Adaptation */
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+    background-color: var(--input-bg);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25);
+}
+
+[data-bs-theme="dark"] .input-group-text {
+    background-color: #1a2337;
+    border-color: var(--input-border);
+    color: #94a3b8;
+}
+
+/* Tables */
+.table-custom {
+    vertical-align: middle;
+    color: var(--text-primary);
+}
+
+.table-custom th {
+    background-color: var(--table-head-bg);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--card-border);
+}
+
+[data-bs-theme="dark"] .table-custom td {
+    border-color: var(--card-border);
+    background-color: transparent;
+    color: var(--text-primary);
 }
 
 /* Badges */
@@ -112,123 +293,118 @@ body {
 }
 
 .badge-available {
-    background-color: #ecfdf5;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
+    background-color: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .badge-maintenance {
-    background-color: #fffbeb;
-    color: #92400e;
-    border: 1px solid #fde68a;
+    background-color: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .badge-booked {
-    background-color: #eff6ff;
-    color: #1e40af;
-    border: 1px solid #bfdbfe;
+    background-color: rgba(37, 99, 235, 0.12);
+    color: #3b82f6;
+    border: 1px solid rgba(37, 99, 235, 0.3);
 }
 
 .badge-cancelled {
-    background-color: #fef2f2;
-    color: #991b1b;
-    border: 1px solid #fecaca;
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .badge-completed {
-    background-color: #f3f4f6;
-    color: #374151;
-    border: 1px solid #e5e7eb;
+    background-color: rgba(100, 116, 139, 0.12);
+    color: #94a3b8;
+    border: 1px solid rgba(100, 116, 139, 0.3);
 }
 
-/* Action Buttons */
-.btn-primary-custom {
-    background-color: var(--primary-color);
+/* =========================================================
+   PRICING & PAYMENT UI
+   ========================================================= */
+
+.pricing-calc-box {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(59, 130, 246, 0.08) 100%);
+    border: 2px dashed rgba(37, 99, 235, 0.3);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+[data-bs-theme="dark"] .pricing-calc-box {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(15, 23, 42, 0.6) 100%);
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+.payment-method-card {
+    border: 2px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--card-bg);
+}
+
+.payment-method-card:hover {
     border-color: var(--primary-color);
-    color: #ffffff;
-    font-weight: 500;
+    transform: translateY(-2px);
 }
 
-.btn-primary-custom:hover {
-    background-color: var(--primary-hover);
-    border-color: var(--primary-hover);
-    color: #ffffff;
+.payment-method-card.selected {
+    border-color: var(--primary-color);
+    background-color: rgba(37, 99, 235, 0.06);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.18);
 }
 
-/* Table */
-.table-custom {
-    vertical-align: middle;
-}
-
-.table-custom th {
-    background-color: #f8fafc;
-    color: #475569;
-    font-weight: 600;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 2px solid var(--border-color);
-}
-
-/* Login Page */
-.login-body {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-}
-
-.login-card {
-    max-width: 440px;
-    width: 100%;
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 2.5rem;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
-}
-
-/* Receipt Styling */
+/* Receipt */
 .receipt-container {
     max-width: 720px;
     margin: 0 auto;
-    background: #ffffff;
-    border: 2px dashed #cbd5e1;
-    border-radius: 12px;
+    background: var(--card-bg);
+    border: 2px dashed var(--card-border);
+    border-radius: 16px;
     padding: 2.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .receipt-container {
+    border-color: #2b3954;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.35);
 }
 
 .receipt-header {
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--card-border);
     padding-bottom: 1.5rem;
     margin-bottom: 1.5rem;
 }
 
 .receipt-ref-badge {
-    background-color: #eff6ff;
-    color: #1d4ed8;
+    background-color: rgba(37, 99, 235, 0.12);
+    color: var(--primary-color);
     font-family: monospace;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+    font-weight: 700;
     padding: 0.4rem 0.8rem;
     border-radius: 6px;
-    border: 1px solid #bfdbfe;
+    border: 1px solid rgba(37, 99, 235, 0.3);
     display: inline-block;
 }
 
-.receipt-footer {
-    border-top: 1px solid #e2e8f0;
-    padding-top: 1.5rem;
-    margin-top: 1.5rem;
-}
-
-/* Footer */
-footer {
+/* QR Code Display Simulator */
+.qr-mock-box {
+    width: 140px;
+    height: 140px;
     background: #ffffff;
-    border-top: 1px solid var(--border-color);
-    padding: 1rem 0;
-    font-size: 0.875rem;
-    color: #64748b;
+    padding: 10px;
+    border-radius: 10px;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
 }
 
 /* Print CSS */
@@ -237,8 +413,12 @@ footer {
         background-color: #ffffff !important;
         color: #000000 !important;
     }
-    .no-print, .navbar, footer, .btn {
+    .app-sidebar, .mobile-topbar, .no-print, .btn, footer {
         display: none !important;
+    }
+    .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
     }
     .receipt-container {
         border: 1px solid #000000 !important;

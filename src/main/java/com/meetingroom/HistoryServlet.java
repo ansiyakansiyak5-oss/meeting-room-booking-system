@@ -80,12 +80,16 @@ public class HistoryServlet extends HttpServlet {
                             rs.getString("employee_name"),
                             rs.getString("employee_id"),
                             rs.getString("department"),
+                            rs.getString("user_type"),
                             rs.getString("meeting_title"),
                             rs.getString("meeting_date"),
                             rs.getString("start_time"),
                             rs.getString("end_time"),
                             rs.getInt("participants"),
                             rs.getString("purpose"),
+                            rs.getDouble("total_amount"),
+                            rs.getString("payment_method"),
+                            rs.getString("payment_status"),
                             rs.getString("booking_status")
                     );
                     bookings.add(b);

@@ -107,6 +107,7 @@ public class AvailabilityServlet extends HttpServlet {
                                     rs.getInt("capacity"),
                                     rs.getString("room_type"),
                                     rs.getString("facilities"),
+                                    rs.getDouble("hourly_rate"),
                                     rs.getString("status")
                             );
                             availableRooms.add(r);

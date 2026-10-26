@@ -162,6 +162,7 @@ public class DatabaseConnection {
                 "capacity INT NOT NULL, " +
                 "room_type VARCHAR(50), " +
                 "facilities VARCHAR(255), " +
+                "hourly_rate DECIMAL(10,2) DEFAULT 15.00, " +
                 "status VARCHAR(30) DEFAULT 'Available'" +
                 ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
@@ -174,12 +175,16 @@ public class DatabaseConnection {
                 "employee_name VARCHAR(100) NOT NULL, " +
                 "employee_id VARCHAR(50) NOT NULL, " +
                 "department VARCHAR(100), " +
+                "user_type VARCHAR(50) DEFAULT 'Employee', " +
                 "meeting_title VARCHAR(150) NOT NULL, " +
                 "meeting_date DATE NOT NULL, " +
                 "start_time TIME NOT NULL, " +
                 "end_time TIME NOT NULL, " +
                 "participants INT NOT NULL, " +
                 "purpose VARCHAR(255), " +
+                "total_amount DECIMAL(10,2) DEFAULT 0.00, " +
+                "payment_method VARCHAR(50) DEFAULT 'Offline', " +
+                "payment_status VARCHAR(30) DEFAULT 'Pending', " +
                 "booking_status VARCHAR(30) DEFAULT 'Booked', " +
                 "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
                 "FOREIGN KEY (room_id) REFERENCES rooms(room_id) ON DELETE RESTRICT" +
@@ -189,6 +194,13 @@ public class DatabaseConnection {
             stmt.executeUpdate(createUsers);
             stmt.executeUpdate(createRooms);
             stmt.executeUpdate(createBookings);
+
+            // Ensure new columns exist in older tables (migration safeguard)
+            try { stmt.executeUpdate("ALTER TABLE rooms ADD COLUMN hourly_rate DECIMAL(10,2) DEFAULT 15.00"); } catch (Exception ignored) {}
+            try { stmt.executeUpdate("ALTER TABLE bookings ADD COLUMN user_type VARCHAR(50) DEFAULT 'Employee'"); } catch (Exception ignored) {}
+            try { stmt.executeUpdate("ALTER TABLE bookings ADD COLUMN total_amount DECIMAL(10,2) DEFAULT 0.00"); } catch (Exception ignored) {}
+            try { stmt.executeUpdate("ALTER TABLE bookings ADD COLUMN payment_method VARCHAR(50) DEFAULT 'Offline'"); } catch (Exception ignored) {}
+            try { stmt.executeUpdate("ALTER TABLE bookings ADD COLUMN payment_status VARCHAR(30) DEFAULT 'Pending'"); } catch (Exception ignored) {}
 
             // Insert default admin if not exists
             try (PreparedStatement checkAdmin = conn.prepareStatement("SELECT COUNT(*) FROM users WHERE username = ?")) {

@@ -9,7 +9,6 @@
     @SuppressWarnings("unchecked")
     List<Room> rooms = (List<Room>) request.getAttribute("rooms");
     if (rooms == null) {
-        // Direct access, redirect to servlet
         response.sendRedirect(request.getContextPath() + "/rooms");
         return;
     }
@@ -25,29 +24,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Room Management - Meeting Room Booking System</title>
+    <title>Room Management - MeetRoom Pro</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="<%= request.getContextPath() %>/css/style.css" rel="stylesheet">
+    <!-- Custom CSS (with cache buster) -->
+    <link href="<%= request.getContextPath() %>/css/style.css?v=3.1" rel="stylesheet">
 </head>
 <body>
 
-    <!-- Header Navigation -->
-    <%@ include file="navbar.jsp" %>
+    <!-- Main Left Sidebar & Mobile Navigation -->
+    <%@ include file="sidebar.jsp" %>
 
     <div class="main-content">
-        <div class="container-fluid px-4">
+        <div class="container-fluid">
 
-            <!-- Breadcrumb and Title -->
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <!-- Title & Actions -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                 <div>
-                    <h2 class="fw-bold mb-1 text-dark"><i class="bi bi-door-open text-primary me-2"></i>Room Management</h2>
-                    <p class="text-muted mb-0">Create, configure, and monitor conference and meeting facilities.</p>
+                    <h2 class="fw-bold mb-1"><i class="bi bi-door-open text-primary me-2"></i>Room Management</h2>
+                    <p class="text-muted mb-0">Manage meeting rooms, equipment, capacity, and hourly billing rates.</p>
                 </div>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoomModal">
+                <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addRoomModal">
                     <i class="bi bi-plus-circle me-1"></i> Add New Room
                 </button>
             </div>
@@ -79,7 +78,7 @@
                 <form action="<%= request.getContextPath() %>/rooms" method="get" class="row g-2 align-items-center">
                     <div class="col-md-8 col-sm-12">
                         <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
                             <input type="text" name="search" class="form-control" placeholder="Search by Room Number, Name, Building, Type..." value="<%= searchQuery %>">
                         </div>
                     </div>
@@ -97,10 +96,10 @@
             </div>
 
             <!-- Room Table -->
-            <div class="card card-custom border-0 overflow-hidden">
+            <div class="card card-custom border-0 overflow-hidden mb-4">
                 <div class="card-header-custom d-flex justify-content-between align-items-center">
-                    <span class="fw-bold text-dark">Registered Rooms (<%= rooms.size() %>)</span>
-                    <span class="badge bg-light text-muted border">Protected from deletion if actively booked</span>
+                    <span class="fw-bold">Registered Rooms (<%= rooms.size() %>)</span>
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary border">Safe deletion enabled</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -112,6 +111,7 @@
                                     <th>Building &amp; Floor</th>
                                     <th>Capacity</th>
                                     <th>Type</th>
+                                    <th>Hourly Rate</th>
                                     <th>Facilities</th>
                                     <th>Status</th>
                                     <th class="text-end">Actions</th>
@@ -120,7 +120,7 @@
                             <tbody>
                                 <% if (rooms.isEmpty()) { %>
                                     <tr>
-                                        <td colspan="8" class="text-center py-5 text-muted">
+                                        <td colspan="9" class="text-center py-5 text-muted">
                                             <i class="bi bi-door-closed fs-1 d-block mb-2 text-secondary"></i>
                                             No rooms found matching your search.
                                         </td>
@@ -128,20 +128,24 @@
                                 <% } else { %>
                                     <% for (Room r : rooms) { %>
                                         <tr>
-                                            <td class="fw-bold font-monospace"><%= r.getRoomNumber() %></td>
+                                            <td class="fw-bold font-monospace text-primary"><%= r.getRoomNumber() %></td>
                                             <td>
-                                                <div class="fw-semibold text-dark"><%= r.getRoomName() %></div>
+                                                <div class="fw-semibold"><%= r.getRoomName() %></div>
                                             </td>
                                             <td>
                                                 <div><%= r.getBuilding() %></div>
                                                 <small class="text-muted"><%= r.getFloor() %></small>
                                             </td>
                                             <td>
-                                                <span class="badge bg-light text-dark border">
+                                                <span class="badge bg-secondary bg-opacity-25 border">
                                                     <i class="bi bi-people me-1"></i><%= r.getCapacity() %> Seats
                                                 </span>
                                             </td>
-                                            <td><span class="badge bg-secondary-subtle text-secondary border"><%= r.getRoomType() %></span></td>
+                                            <td><span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25"><%= r.getRoomType() %></span></td>
+                                            <td>
+                                                <span class="fw-bold text-success">$<%= String.format("%.2f", r.getHourlyRate()) %></span>
+                                                <small class="text-muted">/hr</small>
+                                            </td>
                                             <td class="small text-muted" style="max-width: 250px;">
                                                 <%= (r.getFacilities() != null && !r.getFacilities().isEmpty()) ? r.getFacilities() : "Standard equipment" %>
                                             </td>
@@ -159,7 +163,7 @@
                                             <td class="text-end">
                                                 <div class="btn-group btn-group-sm">
                                                     <button type="button" class="btn btn-outline-secondary" title="Edit Room"
-                                                            onclick="openEditRoomModal(<%= r.getRoomId() %>, '<%= r.getRoomNumber() %>', '<%= r.getRoomName().replace("'", "\\'") %>', '<%= r.getBuilding().replace("'", "\\'") %>', '<%= r.getFloor().replace("'", "\\'") %>', <%= r.getCapacity() %>, '<%= r.getRoomType() %>', '<%= (r.getFacilities() != null ? r.getFacilities().replace("'", "\\'") : "") %>', '<%= r.getStatus() %>')">
+                                                            onclick="openEditRoomModal(<%= r.getRoomId() %>, '<%= r.getRoomNumber() %>', '<%= r.getRoomName().replace("'", "\\'") %>', '<%= r.getBuilding().replace("'", "\\'") %>', '<%= r.getFloor().replace("'", "\\'") %>', <%= r.getCapacity() %>, '<%= r.getRoomType() %>', '<%= (r.getFacilities() != null ? r.getFacilities().replace("'", "\\'") : "") %>', <%= r.getHourlyRate() %>, '<%= r.getStatus() %>')">
                                                         <i class="bi bi-pencil"></i>
                                                     </button>
                                                     <a href="<%= request.getContextPath() %>/rooms?action=toggle&roomId=<%= r.getRoomId() %>" class="btn btn-outline-warning" title="Toggle Available / Maintenance">
@@ -208,8 +212,15 @@
                                 <input type="text" name="roomName" class="form-control" placeholder="e.g. Executive Boardroom" required>
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label fw-semibold">Hourly Rate ($/hr) *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" step="0.5" name="hourlyRate" class="form-control" value="15.00" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">Building</label>
-                                <input type="text" name="building" class="form-control" placeholder="e.g. Building A">
+                                <input type="text" name="building" class="form-control" placeholder="e.g. Academic Block B">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Floor</label>
@@ -223,9 +234,10 @@
                                     <option value="Board Room">Board Room</option>
                                     <option value="Huddle Room">Huddle Room</option>
                                     <option value="Seminar Room">Seminar Room</option>
+                                    <option value="Student Project Lab">Student Project Lab</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label fw-semibold">Status</label>
                                 <select name="status" class="form-select">
                                     <option value="Available">Available</option>
@@ -234,11 +246,11 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Facilities / Equipment</label>
-                                <textarea name="facilities" class="form-control" rows="2" placeholder="e.g. Projector, Video Bar, Smart TV, Whiteboard, Wi-Fi"></textarea>
+                                <textarea name="facilities" class="form-control" rows="2" placeholder="e.g. 4K Projector, High-speed Wi-Fi, Video Bar, AC, Power Plugs"></textarea>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light">
+                    <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i> Save Room</button>
                     </div>
@@ -273,6 +285,13 @@
                                 <input type="text" name="roomName" id="editRoomName" class="form-control" required>
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label fw-semibold">Hourly Rate ($/hr) *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" step="0.5" name="hourlyRate" id="editHourlyRate" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">Building</label>
                                 <input type="text" name="building" id="editBuilding" class="form-control">
                             </div>
@@ -288,9 +307,10 @@
                                     <option value="Board Room">Board Room</option>
                                     <option value="Huddle Room">Huddle Room</option>
                                     <option value="Seminar Room">Seminar Room</option>
+                                    <option value="Student Project Lab">Student Project Lab</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label fw-semibold">Status</label>
                                 <select name="status" id="editStatus" class="form-select">
                                     <option value="Available">Available</option>
@@ -303,7 +323,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light">
+                    <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Update Room</button>
                     </div>

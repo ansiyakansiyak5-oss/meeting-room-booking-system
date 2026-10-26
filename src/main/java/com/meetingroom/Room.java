@@ -13,12 +13,16 @@ public class Room implements Serializable {
     private int capacity;
     private String roomType;
     private String facilities;
+    private double hourlyRate;
     private String status;
 
-    public Room() {}
+    public Room() {
+        this.hourlyRate = 15.00;
+        this.status = "Available";
+    }
 
     public Room(int roomId, String roomNumber, String roomName, String building, String floor,
-                int capacity, String roomType, String facilities, String status) {
+                int capacity, String roomType, String facilities, double hourlyRate, String status) {
         this.roomId = roomId;
         this.roomNumber = roomNumber;
         this.roomName = roomName;
@@ -27,7 +31,13 @@ public class Room implements Serializable {
         this.capacity = capacity;
         this.roomType = roomType;
         this.facilities = facilities;
+        this.hourlyRate = hourlyRate;
         this.status = status;
+    }
+
+    public Room(int roomId, String roomNumber, String roomName, String building, String floor,
+                int capacity, String roomType, String facilities, String status) {
+        this(roomId, roomNumber, roomName, building, floor, capacity, roomType, facilities, 15.00, status);
     }
 
     public int getRoomId() { return roomId; }
@@ -53,6 +63,9 @@ public class Room implements Serializable {
 
     public String getFacilities() { return facilities; }
     public void setFacilities(String facilities) { this.facilities = facilities; }
+
+    public double getHourlyRate() { return hourlyRate; }
+    public void setHourlyRate(double hourlyRate) { this.hourlyRate = hourlyRate; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
