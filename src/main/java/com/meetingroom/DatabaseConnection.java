@@ -76,36 +76,75 @@ public class DatabaseConnection {
         String password = "";
         boolean isAivenOrCloud = false;
 
-        if (databaseUrl != null && (databaseUrl.startsWith("mysql://") || databaseUrl.startsWith("jdbc:mysql://"))) {
-            try {
-                String cleanUrl = databaseUrl;
-                if (cleanUrl.startsWith("jdbc:")) {
-                    cleanUrl = cleanUrl.substring(5);
+        // Read individual environment variables
+        host = getEnvOrProp("DB_HOST", "localhost");
+        port = getEnvOrProp("DB_PORT", "3306");
+        dbName = getEnvOrProp("DB_NAME", "meeting_room_db");
+        user = getEnvOrProp("DB_USER", "root");
+        password = getEnvOrProp("DB_PASSWORD", "");
+
+        // If full database URL is provided (DATABASE_URL or MYSQL_URL), or if host contains full URI
+        String fullUrlCandidate = getEnvOrProp("DATABASE_URL", getEnvOrProp("MYSQL_URL", null));
+        if (fullUrlCandidate == null && (host.startsWith("mysql://") || host.startsWith("jdbc:mysql://") || host.startsWith("http://") || host.startsWith("https://") || host.contains("@"))) {
+            fullUrlCandidate = host;
+        }
+
+        if (fullUrlCandidate != null && !fullUrlCandidate.trim().isEmpty()) {
+            String s = fullUrlCandidate.trim();
+            if (s.startsWith("jdbc:mysql://")) s = s.substring(13);
+            else if (s.startsWith("mysql://")) s = s.substring(8);
+            else if (s.startsWith("https://")) s = s.substring(8);
+            else if (s.startsWith("http://")) s = s.substring(7);
+
+            int qIdx = s.indexOf('?');
+            if (qIdx != -1) s = s.substring(0, qIdx);
+
+            int atIdx = s.indexOf('@');
+            if (atIdx != -1) {
+                String creds = s.substring(0, atIdx);
+                s = s.substring(atIdx + 1);
+                int colon = creds.indexOf(':');
+                if (colon != -1) {
+                    user = creds.substring(0, colon);
+                    password = creds.substring(colon + 1);
+                } else {
+                    user = creds;
                 }
-                URI uri = new URI(cleanUrl);
-                if (uri.getHost() != null) host = uri.getHost();
-                if (uri.getPort() > 0) port = String.valueOf(uri.getPort());
-                if (uri.getPath() != null && uri.getPath().length() > 1) {
-                    dbName = uri.getPath().substring(1);
-                }
-                if (uri.getUserInfo() != null) {
-                    String[] userInfo = uri.getUserInfo().split(":", 2);
-                    user = userInfo[0];
-                    if (userInfo.length > 1) {
-                        password = userInfo[1];
-                    }
-                }
-                isAivenOrCloud = true;
-            } catch (Exception e) {
-                System.err.println("[DatabaseConnection] Warning: Failed to parse DATABASE_URL: " + e.getMessage());
             }
-        } else {
-            // Read individual environment variables
-            host = getEnvOrProp("DB_HOST", "localhost");
-            port = getEnvOrProp("DB_PORT", "3306");
-            dbName = getEnvOrProp("DB_NAME", "meeting_room_db");
-            user = getEnvOrProp("DB_USER", "root");
-            password = getEnvOrProp("DB_PASSWORD", "");
+
+            int slashIdx = s.indexOf('/');
+            if (slashIdx != -1) {
+                String parsedDb = s.substring(slashIdx + 1);
+                if (!parsedDb.isEmpty()) dbName = parsedDb;
+                s = s.substring(0, slashIdx);
+            }
+
+            int portIdx = s.indexOf(':');
+            if (portIdx != -1) {
+                port = s.substring(portIdx + 1);
+                s = s.substring(0, portIdx);
+            }
+
+            host = s.trim();
+            isAivenOrCloud = true;
+        }
+
+        // Clean any accidental protocols or colons in individual variables
+        if (host.startsWith("jdbc:mysql://")) host = host.substring(13);
+        if (host.startsWith("mysql://")) host = host.substring(8);
+        if (host.startsWith("https://")) host = host.substring(8);
+        if (host.startsWith("http://")) host = host.substring(7);
+        if (host.contains(":")) {
+            int c = host.indexOf(':');
+            port = host.substring(c + 1).replace("/", "").trim();
+            host = host.substring(0, c).trim();
+        }
+        if (host.endsWith("/")) host = host.substring(0, host.length() - 1);
+        if (port != null) port = port.replace(":", "").trim();
+        if (dbName != null) {
+            if (dbName.startsWith("/")) dbName = dbName.substring(1);
+            int q = dbName.indexOf('?');
+            if (q != -1) dbName = dbName.substring(0, q);
         }
 
         // Aiven hosts typically contain 'aivencloud.com'
