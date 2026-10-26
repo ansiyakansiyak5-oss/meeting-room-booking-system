@@ -152,11 +152,16 @@ public class DatabaseConnection {
             isAivenOrCloud = true;
         }
 
+        // Auto-fix Aiven X-Protocol port to standard MySQL port
+        if ("26552".equals(port)) {
+            port = "26548";
+        }
+
         // Build JDBC URL
         String jdbcUrl;
         if (isAivenOrCloud && !host.equalsIgnoreCase("localhost")) {
             jdbcUrl = String.format(
-                "jdbc:mysql://%s:%s/%s?sslMode=PREFERRED&useSSL=true&allowPublicKeyRetrieval=true&autoReconnect=true&connectTimeout=10000&socketTimeout=30000&serverTimezone=UTC",
+                "jdbc:mysql://%s:%s/%s?sslMode=REQUIRED&useSSL=true&allowPublicKeyRetrieval=true&autoReconnect=true&connectTimeout=10000&socketTimeout=30000&serverTimezone=UTC",
                 host, port, dbName
             );
         } else {
@@ -170,11 +175,23 @@ public class DatabaseConnection {
         try {
             conn = DriverManager.getConnection(jdbcUrl, user, password);
         } catch (SQLException e) {
-            // Provide exact diagnostic detail so host, port, user and DB can be verified instantly
-            throw new SQLException(
-                String.format("Unable to connect to MySQL at [%s:%s/%s] with user '%s': %s", host, port, dbName, user, e.getMessage()),
-                e
-            );
+            // If connection failed and port is 26552, retry with 26548
+            if ("26552".equals(port)) {
+                try {
+                    String retryUrl = jdbcUrl.replace(":26552", ":26548");
+                    conn = DriverManager.getConnection(retryUrl, user, password);
+                } catch (SQLException retryEx) {
+                    throw new SQLException(
+                        String.format("Unable to connect to MySQL at [%s:%s/%s] with user '%s': %s", host, port, dbName, user, retryEx.getMessage()),
+                        retryEx
+                    );
+                }
+            } else {
+                throw new SQLException(
+                    String.format("Unable to connect to MySQL at [%s:%s/%s] with user '%s': %s", host, port, dbName, user, e.getMessage()),
+                    e
+                );
+            }
         }
 
         // Ensure tables exist on first successful connection
