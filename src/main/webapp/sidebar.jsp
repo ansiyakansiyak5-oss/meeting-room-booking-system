@@ -228,3 +228,6 @@
         </a>
     </div>
 </aside>
+
+<!-- Floating MRBS AI Assistant Component (Available Across All Portal Pages) -->
+<%@ include file="chatbot.jsp" %>

@@ -7,6 +7,8 @@ tomcat/
 *.log
 
 # Sensitive credentials
+.env
+*.env
 db.env
 cookies.txt
 pro 1/

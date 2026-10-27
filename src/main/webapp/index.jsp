@@ -17,20 +17,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>Student &amp; Admin Login - MeetRoom Pro</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <!-- Custom CSS (with cache buster) -->
-    <link href="<%= request.getContextPath() %>/css/style.css?v=3.2" rel="stylesheet">
+    <link href="<%= request.getContextPath() %>/css/style.css?v=3.3" rel="stylesheet">
     <style>
+        html, body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden !important;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
         .login-hero-container {
             min-height: 100vh;
+            min-height: 100dvh;
+            width: 100%;
+            max-width: 100%;
             display: flex;
             align-items: stretch;
             background: #0f172a;
+            overflow-x: hidden;
         }
         .login-visual-side {
             position: relative;
@@ -46,8 +61,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2.5rem;
+            padding: 1.5rem 1rem !important;
+            width: 100%;
+            max-width: 100%;
             background: #ffffff;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+        @media (min-width: 768px) {
+            .login-form-side {
+                padding: 2.5rem 2rem !important;
+            }
         }
         [data-bs-theme="dark"] .login-form-side {
             background: #0b1120;
@@ -55,6 +79,10 @@
         }
         .role-btn.active {
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+        }
+        .alert {
+            word-break: break-word !important;
+            overflow-wrap: anywhere !important;
         }
     </style>
 </head>
@@ -174,7 +202,7 @@
                             <div class="small fw-bold"><i class="bi bi-key-fill text-success me-1"></i> Quick 1-Click Credentials:</div>
                             <span class="badge bg-success">Ready</span>
                         </div>
-                        <div class="d-flex gap-2">
+                        <div class="d-flex flex-column flex-sm-row gap-2">
                             <button type="button" class="btn btn-sm btn-outline-success flex-grow-1 text-start" onclick="setRole('student')">
                                 <div class="fw-bold"><i class="bi bi-mortarboard-fill me-1"></i> Student (Default)</div>
                                 <div class="font-monospace small text-muted">student / student123</div>
@@ -194,6 +222,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Floating AI Chatbot Component -->
+    <%@ include file="chatbot.jsp" %>
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
