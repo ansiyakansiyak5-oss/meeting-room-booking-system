@@ -13,7 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@WebServlet(urlPatterns = {"/login", "/logout"})
+@WebServlet(urlPatterns = {"/login", "/logout", "/student-login"})
 public class LoginServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -59,8 +59,10 @@ public class LoginServlet extends HttpServlet {
                 if (rs.next()) {
                     // Successful login
                     HttpSession session = request.getSession(true);
-                    session.setAttribute("user", rs.getString("username"));
+                    String loggedInUser = rs.getString("username");
+                    session.setAttribute("user", loggedInUser);
                     session.setAttribute("userId", rs.getInt("user_id"));
+                    session.setAttribute("role", "admin".equalsIgnoreCase(loggedInUser) ? "Admin" : "Student");
 
                     response.sendRedirect(request.getContextPath() + "/dashboard.jsp");
                 } else {
