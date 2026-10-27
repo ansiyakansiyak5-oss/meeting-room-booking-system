@@ -150,14 +150,14 @@
     <!-- User Profile Badge -->
     <div class="sidebar-user px-4 py-3 border-bottom border-secondary border-opacity-25">
         <div class="d-flex align-items-center">
-            <div class="avatar-circle me-3 bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 42px; height: 42px; font-size: 1.1rem;">
-                <%= sidebarUsername.length() > 0 ? sidebarUsername.substring(0, 1).toUpperCase() : "U" %>
+            <div class="avatar-circle me-3 <%= "student".equalsIgnoreCase(sidebarUsername) ? "bg-success bg-opacity-25 text-success border-success" : "bg-primary bg-opacity-25 text-primary border-primary" %> border border-opacity-50 rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 42px; height: 42px; font-size: 1.1rem;">
+                <%= "student".equalsIgnoreCase(sidebarUsername) ? "🎓" : (sidebarUsername.length() > 0 ? sidebarUsername.substring(0, 1).toUpperCase() : "U") %>
             </div>
             <div class="overflow-hidden">
                 <div class="text-white fw-semibold text-truncate small mb-0"><%= sidebarUsername %></div>
                 <div class="d-flex align-items-center gap-1">
-                    <span class="online-indicator"></span>
-                    <span class="text-white-50" style="font-size: 0.75rem;">Active &bull; Verified</span>
+                    <span class="online-indicator" style="<%= "student".equalsIgnoreCase(sidebarUsername) ? "background-color: #22c55e;" : "" %>"></span>
+                    <span class="text-white-50" style="font-size: 0.75rem;"><%= "student".equalsIgnoreCase(sidebarUsername) ? "Student &bull; 20% Subsidy Active" : "Admin &bull; Verified" %></span>
                 </div>
             </div>
         </div>

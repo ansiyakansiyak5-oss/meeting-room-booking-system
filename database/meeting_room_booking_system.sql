@@ -52,9 +52,11 @@ CREATE TABLE IF NOT EXISTS bookings (
     FOREIGN KEY (room_id) REFERENCES rooms(room_id) ON DELETE RESTRICT
 );
 
--- Default Administrator
+-- Default Administrator & Student Users (Student is default portal user)
 INSERT INTO users (username, password) 
-VALUES ('admin', 'admin123')
+VALUES 
+    ('student', 'student123'),
+    ('admin', 'admin123')
 ON DUPLICATE KEY UPDATE username = username;
 
 -- Sample Rooms with Pricing

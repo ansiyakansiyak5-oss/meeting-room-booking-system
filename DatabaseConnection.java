@@ -76,36 +76,75 @@ public class DatabaseConnection {
         String password = "";
         boolean isAivenOrCloud = false;
 
-        if (databaseUrl != null && (databaseUrl.startsWith("mysql://") || databaseUrl.startsWith("jdbc:mysql://"))) {
-            try {
-                String cleanUrl = databaseUrl;
-                if (cleanUrl.startsWith("jdbc:")) {
-                    cleanUrl = cleanUrl.substring(5);
+        // Read individual environment variables
+        host = getEnvOrProp("DB_HOST", "localhost");
+        port = getEnvOrProp("DB_PORT", "3306");
+        dbName = getEnvOrProp("DB_NAME", "meeting_room_db");
+        user = getEnvOrProp("DB_USER", "root");
+        password = getEnvOrProp("DB_PASSWORD", "");
+
+        // If full database URL is provided (DATABASE_URL or MYSQL_URL), or if host contains full URI
+        String fullUrlCandidate = getEnvOrProp("DATABASE_URL", getEnvOrProp("MYSQL_URL", null));
+        if (fullUrlCandidate == null && (host.startsWith("mysql://") || host.startsWith("jdbc:mysql://") || host.startsWith("http://") || host.startsWith("https://") || host.contains("@"))) {
+            fullUrlCandidate = host;
+        }
+
+        if (fullUrlCandidate != null && !fullUrlCandidate.trim().isEmpty()) {
+            String s = fullUrlCandidate.trim();
+            if (s.startsWith("jdbc:mysql://")) s = s.substring(13);
+            else if (s.startsWith("mysql://")) s = s.substring(8);
+            else if (s.startsWith("https://")) s = s.substring(8);
+            else if (s.startsWith("http://")) s = s.substring(7);
+
+            int qIdx = s.indexOf('?');
+            if (qIdx != -1) s = s.substring(0, qIdx);
+
+            int atIdx = s.indexOf('@');
+            if (atIdx != -1) {
+                String creds = s.substring(0, atIdx);
+                s = s.substring(atIdx + 1);
+                int colon = creds.indexOf(':');
+                if (colon != -1) {
+                    user = creds.substring(0, colon);
+                    password = creds.substring(colon + 1);
+                } else {
+                    user = creds;
                 }
-                URI uri = new URI(cleanUrl);
-                if (uri.getHost() != null) host = uri.getHost();
-                if (uri.getPort() > 0) port = String.valueOf(uri.getPort());
-                if (uri.getPath() != null && uri.getPath().length() > 1) {
-                    dbName = uri.getPath().substring(1);
-                }
-                if (uri.getUserInfo() != null) {
-                    String[] userInfo = uri.getUserInfo().split(":", 2);
-                    user = userInfo[0];
-                    if (userInfo.length > 1) {
-                        password = userInfo[1];
-                    }
-                }
-                isAivenOrCloud = true;
-            } catch (Exception e) {
-                System.err.println("[DatabaseConnection] Warning: Failed to parse DATABASE_URL: " + e.getMessage());
             }
-        } else {
-            // Read individual environment variables
-            host = getEnvOrProp("DB_HOST", "localhost");
-            port = getEnvOrProp("DB_PORT", "3306");
-            dbName = getEnvOrProp("DB_NAME", "meeting_room_db");
-            user = getEnvOrProp("DB_USER", "root");
-            password = getEnvOrProp("DB_PASSWORD", "");
+
+            int slashIdx = s.indexOf('/');
+            if (slashIdx != -1) {
+                String parsedDb = s.substring(slashIdx + 1);
+                if (!parsedDb.isEmpty()) dbName = parsedDb;
+                s = s.substring(0, slashIdx);
+            }
+
+            int portIdx = s.indexOf(':');
+            if (portIdx != -1) {
+                port = s.substring(portIdx + 1);
+                s = s.substring(0, portIdx);
+            }
+
+            host = s.trim();
+            isAivenOrCloud = true;
+        }
+
+        // Clean any accidental protocols or colons in individual variables
+        if (host.startsWith("jdbc:mysql://")) host = host.substring(13);
+        if (host.startsWith("mysql://")) host = host.substring(8);
+        if (host.startsWith("https://")) host = host.substring(8);
+        if (host.startsWith("http://")) host = host.substring(7);
+        if (host.contains(":")) {
+            int c = host.indexOf(':');
+            port = host.substring(c + 1).replace("/", "").trim();
+            host = host.substring(0, c).trim();
+        }
+        if (host.endsWith("/")) host = host.substring(0, host.length() - 1);
+        if (port != null) port = port.replace(":", "").trim();
+        if (dbName != null) {
+            if (dbName.startsWith("/")) dbName = dbName.substring(1);
+            int q = dbName.indexOf('?');
+            if (q != -1) dbName = dbName.substring(0, q);
         }
 
         // Aiven hosts typically contain 'aivencloud.com'
@@ -113,12 +152,16 @@ public class DatabaseConnection {
             isAivenOrCloud = true;
         }
 
+        // Auto-fix Aiven X-Protocol port to standard MySQL port
+        if ("26552".equals(port)) {
+            port = "26548";
+        }
+
         // Build JDBC URL
-        // Aiven MySQL requires SSL.
         String jdbcUrl;
         if (isAivenOrCloud && !host.equalsIgnoreCase("localhost")) {
             jdbcUrl = String.format(
-                "jdbc:mysql://%s:%s/%s?ssl-mode=REQUIRED&useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=UTC",
+                "jdbc:mysql://%s:%s/%s?sslMode=REQUIRED&useSSL=true&allowPublicKeyRetrieval=true&autoReconnect=true&connectTimeout=10000&socketTimeout=30000&serverTimezone=UTC",
                 host, port, dbName
             );
         } else {
@@ -128,7 +171,28 @@ public class DatabaseConnection {
             );
         }
 
-        Connection conn = DriverManager.getConnection(jdbcUrl, user, password);
+        Connection conn;
+        try {
+            conn = DriverManager.getConnection(jdbcUrl, user, password);
+        } catch (SQLException e) {
+            // If connection failed and port is 26552, retry with 26548
+            if ("26552".equals(port)) {
+                try {
+                    String retryUrl = jdbcUrl.replace(":26552", ":26548");
+                    conn = DriverManager.getConnection(retryUrl, user, password);
+                } catch (SQLException retryEx) {
+                    throw new SQLException(
+                        String.format("Unable to connect to MySQL at [%s:%s/%s] with user '%s': %s", host, port, dbName, user, retryEx.getMessage()),
+                        retryEx
+                    );
+                }
+            } else {
+                throw new SQLException(
+                    String.format("Unable to connect to MySQL at [%s:%s/%s] with user '%s': %s", host, port, dbName, user, e.getMessage()),
+                    e
+                );
+            }
+        }
 
         // Ensure tables exist on first successful connection
         if (!isInitialized) {
@@ -162,6 +226,7 @@ public class DatabaseConnection {
                 "capacity INT NOT NULL, " +
                 "room_type VARCHAR(50), " +
                 "facilities VARCHAR(255), " +
+                "hourly_rate DECIMAL(10,2) DEFAULT 15.00, " +
                 "status VARCHAR(30) DEFAULT 'Available'" +
                 ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
@@ -174,12 +239,16 @@ public class DatabaseConnection {
                 "employee_name VARCHAR(100) NOT NULL, " +
                 "employee_id VARCHAR(50) NOT NULL, " +
                 "department VARCHAR(100), " +
+                "user_type VARCHAR(50) DEFAULT 'Employee', " +
                 "meeting_title VARCHAR(150) NOT NULL, " +
                 "meeting_date DATE NOT NULL, " +
                 "start_time TIME NOT NULL, " +
                 "end_time TIME NOT NULL, " +
                 "participants INT NOT NULL, " +
                 "purpose VARCHAR(255), " +
+                "total_amount DECIMAL(10,2) DEFAULT 0.00, " +
+                "payment_method VARCHAR(50) DEFAULT 'Offline', " +
+                "payment_status VARCHAR(30) DEFAULT 'Pending', " +
                 "booking_status VARCHAR(30) DEFAULT 'Booked', " +
                 "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
                 "FOREIGN KEY (room_id) REFERENCES rooms(room_id) ON DELETE RESTRICT" +
@@ -189,6 +258,13 @@ public class DatabaseConnection {
             stmt.executeUpdate(createUsers);
             stmt.executeUpdate(createRooms);
             stmt.executeUpdate(createBookings);
+
+            // Ensure new columns exist in older tables (migration safeguard)
+            try { stmt.executeUpdate("ALTER TABLE rooms ADD COLUMN hourly_rate DECIMAL(10,2) DEFAULT 15.00"); } catch (Exception ignored) {}
+            try { stmt.executeUpdate("ALTER TABLE bookings ADD COLUMN user_type VARCHAR(50) DEFAULT 'Employee'"); } catch (Exception ignored) {}
+            try { stmt.executeUpdate("ALTER TABLE bookings ADD COLUMN total_amount DECIMAL(10,2) DEFAULT 0.00"); } catch (Exception ignored) {}
+            try { stmt.executeUpdate("ALTER TABLE bookings ADD COLUMN payment_method VARCHAR(50) DEFAULT 'Offline'"); } catch (Exception ignored) {}
+            try { stmt.executeUpdate("ALTER TABLE bookings ADD COLUMN payment_status VARCHAR(30) DEFAULT 'Pending'"); } catch (Exception ignored) {}
 
             // Insert default admin if not exists
             try (PreparedStatement checkAdmin = conn.prepareStatement("SELECT COUNT(*) FROM users WHERE username = ?")) {
@@ -200,6 +276,21 @@ public class DatabaseConnection {
                             insertAdmin.setString(2, "admin123");
                             insertAdmin.executeUpdate();
                             System.out.println("[DatabaseConnection] Default admin user created (admin / admin123).");
+                        }
+                    }
+                }
+            }
+
+            // Insert default student if not exists
+            try (PreparedStatement checkStudent = conn.prepareStatement("SELECT COUNT(*) FROM users WHERE username = ?")) {
+                checkStudent.setString(1, "student");
+                try (ResultSet rs = checkStudent.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        try (PreparedStatement insertStudent = conn.prepareStatement("INSERT INTO users (username, password) VALUES (?, ?)")) {
+                            insertStudent.setString(1, "student");
+                            insertStudent.setString(2, "student123");
+                            insertStudent.executeUpdate();
+                            System.out.println("[DatabaseConnection] Default student user created (student / student123).");
                         }
                     }
                 }

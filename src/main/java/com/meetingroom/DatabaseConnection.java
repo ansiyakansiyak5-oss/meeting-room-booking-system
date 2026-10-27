@@ -281,6 +281,21 @@ public class DatabaseConnection {
                 }
             }
 
+            // Insert default student if not exists
+            try (PreparedStatement checkStudent = conn.prepareStatement("SELECT COUNT(*) FROM users WHERE username = ?")) {
+                checkStudent.setString(1, "student");
+                try (ResultSet rs = checkStudent.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        try (PreparedStatement insertStudent = conn.prepareStatement("INSERT INTO users (username, password) VALUES (?, ?)")) {
+                            insertStudent.setString(1, "student");
+                            insertStudent.setString(2, "student123");
+                            insertStudent.executeUpdate();
+                            System.out.println("[DatabaseConnection] Default student user created (student / student123).");
+                        }
+                    }
+                }
+            }
+
             // Insert sample rooms if rooms table is empty
             try (Statement checkRooms = conn.createStatement();
                  ResultSet rs = checkRooms.executeQuery("SELECT COUNT(*) FROM rooms")) {
