@@ -161,12 +161,12 @@ public class DatabaseConnection {
         String jdbcUrl;
         if (isAivenOrCloud && !host.equalsIgnoreCase("localhost")) {
             jdbcUrl = String.format(
-                "jdbc:mysql://%s:%s/%s?sslMode=REQUIRED&useSSL=true&allowPublicKeyRetrieval=true&autoReconnect=true&connectTimeout=10000&socketTimeout=30000&serverTimezone=UTC",
+                "jdbc:mysql://%s:%s/%s?sslMode=REQUIRED&useSSL=true&allowPublicKeyRetrieval=true&autoReconnect=true&connectTimeout=5000&socketTimeout=30000&serverTimezone=UTC",
                 host, port, dbName
             );
         } else {
             jdbcUrl = String.format(
-                "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC",
+                "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&autoReconnect=true&connectTimeout=5000&socketTimeout=30000&serverTimezone=UTC",
                 host, port, dbName
             );
         }
@@ -175,22 +175,18 @@ public class DatabaseConnection {
         try {
             conn = DriverManager.getConnection(jdbcUrl, user, password);
         } catch (SQLException e) {
+            System.err.println(String.format("[DatabaseConnection] Connection failed for [%s:%s/%s] user '%s': %s", host, port, dbName, user, e.getMessage()));
             // If connection failed and port is 26552, retry with 26548
             if ("26552".equals(port)) {
                 try {
                     String retryUrl = jdbcUrl.replace(":26552", ":26548");
                     conn = DriverManager.getConnection(retryUrl, user, password);
                 } catch (SQLException retryEx) {
-                    throw new SQLException(
-                        String.format("Unable to connect to MySQL at [%s:%s/%s] with user '%s': %s", host, port, dbName, user, retryEx.getMessage()),
-                        retryEx
-                    );
+                    System.err.println("[DatabaseConnection] Retry on port 26548 failed: " + retryEx.getMessage());
+                    throw new SQLException("Unable to connect to MySQL database service.", retryEx);
                 }
             } else {
-                throw new SQLException(
-                    String.format("Unable to connect to MySQL at [%s:%s/%s] with user '%s': %s", host, port, dbName, user, e.getMessage()),
-                    e
-                );
+                throw new SQLException("Unable to connect to MySQL database service.", e);
             }
         }
 
@@ -266,14 +262,14 @@ public class DatabaseConnection {
             try { stmt.executeUpdate("ALTER TABLE bookings ADD COLUMN payment_method VARCHAR(50) DEFAULT 'Offline'"); } catch (Exception ignored) {}
             try { stmt.executeUpdate("ALTER TABLE bookings ADD COLUMN payment_status VARCHAR(30) DEFAULT 'Pending'"); } catch (Exception ignored) {}
 
-            // Insert default admin if not exists
+            // Insert default admin if not exists (securely hashed)
             try (PreparedStatement checkAdmin = conn.prepareStatement("SELECT COUNT(*) FROM users WHERE username = ?")) {
                 checkAdmin.setString(1, "admin");
                 try (ResultSet rs = checkAdmin.executeQuery()) {
                     if (rs.next() && rs.getInt(1) == 0) {
                         try (PreparedStatement insertAdmin = conn.prepareStatement("INSERT INTO users (username, password) VALUES (?, ?)")) {
                             insertAdmin.setString(1, "admin");
-                            insertAdmin.setString(2, "admin123");
+                            insertAdmin.setString(2, PasswordUtil.hashPassword("admin123"));
                             insertAdmin.executeUpdate();
                             System.out.println("[DatabaseConnection] Default admin user created (admin / admin123).");
                         }
@@ -281,20 +277,36 @@ public class DatabaseConnection {
                 }
             }
 
-            // Insert default student if not exists
+            // Insert default student if not exists (securely hashed)
             try (PreparedStatement checkStudent = conn.prepareStatement("SELECT COUNT(*) FROM users WHERE username = ?")) {
                 checkStudent.setString(1, "student");
                 try (ResultSet rs = checkStudent.executeQuery()) {
                     if (rs.next() && rs.getInt(1) == 0) {
                         try (PreparedStatement insertStudent = conn.prepareStatement("INSERT INTO users (username, password) VALUES (?, ?)")) {
                             insertStudent.setString(1, "student");
-                            insertStudent.setString(2, "student123");
+                            insertStudent.setString(2, PasswordUtil.hashPassword("student123"));
                             insertStudent.executeUpdate();
                             System.out.println("[DatabaseConnection] Default student user created (student / student123).");
                         }
                     }
                 }
             }
+
+            // Auto-migrate any unhashed legacy user passwords to secure SHA-256
+            try (Statement checkUsers = conn.createStatement();
+                 ResultSet rs = checkUsers.executeQuery("SELECT user_id, password FROM users")) {
+                while (rs.next()) {
+                    int uid = rs.getInt("user_id");
+                    String rawPwd = rs.getString("password");
+                    if (rawPwd != null && !PasswordUtil.isHashed(rawPwd)) {
+                        try (PreparedStatement updatePs = conn.prepareStatement("UPDATE users SET password = ? WHERE user_id = ?")) {
+                            updatePs.setString(1, PasswordUtil.hashPassword(rawPwd));
+                            updatePs.setInt(2, uid);
+                            updatePs.executeUpdate();
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
 
             // Insert sample rooms if rooms table is empty
             try (Statement checkRooms = conn.createStatement();

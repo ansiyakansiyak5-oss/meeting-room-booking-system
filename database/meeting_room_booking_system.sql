@@ -52,11 +52,13 @@ CREATE TABLE IF NOT EXISTS bookings (
     FOREIGN KEY (room_id) REFERENCES rooms(room_id) ON DELETE RESTRICT
 );
 
--- Default Administrator & Student Users (Student is default portal user)
+-- Default Administrator & Student Users (Secure SHA-256 hashed)
+-- student / student123: 703b0a3d6ad75b649a28adde7d83c6251da457549263bc7ff45ec709b0a8448b
+-- admin / admin123: 240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9
 INSERT INTO users (username, password) 
 VALUES 
-    ('student', 'student123'),
-    ('admin', 'admin123')
+    ('student', '703b0a3d6ad75b649a28adde7d83c6251da457549263bc7ff45ec709b0a8448b'),
+    ('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9')
 ON DUPLICATE KEY UPDATE username = username;
 
 -- Sample Rooms with Pricing

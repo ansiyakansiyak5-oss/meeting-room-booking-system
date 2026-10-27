@@ -174,8 +174,9 @@ public class RoomServlet extends HttpServlet {
 
             response.sendRedirect(request.getContextPath() + "/rooms?success=" + java.net.URLEncoder.encode("Room '" + roomName.trim() + "' added successfully!", "UTF-8"));
         } catch (SQLException e) {
+            System.err.println("[RoomServlet] Room creation error: " + e.getMessage());
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/rooms?error=" + java.net.URLEncoder.encode("Database error: " + e.getMessage(), "UTF-8"));
+            response.sendRedirect(request.getContextPath() + "/rooms?error=" + java.net.URLEncoder.encode("Unable to add room due to a database error.", "UTF-8"));
         }
     }
 
@@ -255,8 +256,9 @@ public class RoomServlet extends HttpServlet {
 
             response.sendRedirect(request.getContextPath() + "/rooms?success=" + java.net.URLEncoder.encode("Room updated successfully!", "UTF-8"));
         } catch (SQLException e) {
+            System.err.println("[RoomServlet] Room creation error: " + e.getMessage());
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/rooms?error=" + java.net.URLEncoder.encode("Database error: " + e.getMessage(), "UTF-8"));
+            response.sendRedirect(request.getContextPath() + "/rooms?error=" + java.net.URLEncoder.encode("Unable to add room due to a database error.", "UTF-8"));
         }
     }
 
@@ -303,8 +305,9 @@ public class RoomServlet extends HttpServlet {
                 }
             }
         } catch (SQLException e) {
+            System.err.println("[RoomServlet] Room creation error: " + e.getMessage());
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/rooms?error=" + java.net.URLEncoder.encode("Database error: " + e.getMessage(), "UTF-8"));
+            response.sendRedirect(request.getContextPath() + "/rooms?error=" + java.net.URLEncoder.encode("Unable to add room due to a database error.", "UTF-8"));
         }
     }
 
@@ -325,8 +328,9 @@ public class RoomServlet extends HttpServlet {
             }
             response.sendRedirect(request.getContextPath() + "/rooms?success=" + java.net.URLEncoder.encode("Room status toggled successfully.", "UTF-8"));
         } catch (SQLException e) {
+            System.err.println("[RoomServlet] Room creation error: " + e.getMessage());
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/rooms?error=" + java.net.URLEncoder.encode("Database error: " + e.getMessage(), "UTF-8"));
+            response.sendRedirect(request.getContextPath() + "/rooms?error=" + java.net.URLEncoder.encode("Unable to add room due to a database error.", "UTF-8"));
         }
     }
 }

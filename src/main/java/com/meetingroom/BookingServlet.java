@@ -298,8 +298,9 @@ public class BookingServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/receipt?bookingId=" + newBookingId + "&new=true");
 
         } catch (SQLException e) {
+            System.err.println("[BookingServlet] Booking creation database error: " + e.getMessage());
             e.printStackTrace();
-            redirectWithError(request, response, "Database error: " + e.getMessage(), false, null);
+            redirectWithError(request, response, "Unable to complete reservation due to a database service error.", false, null);
         }
     }
 
@@ -431,8 +432,9 @@ public class BookingServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/receipt?bookingId=" + bookingId + "&updated=true");
 
         } catch (SQLException e) {
+            System.err.println("[BookingServlet] Booking update database error: " + e.getMessage());
             e.printStackTrace();
-            redirectWithError(request, response, "Database error: " + e.getMessage(), true, bookingIdStr);
+            redirectWithError(request, response, "Unable to update reservation due to a database service error.", true, bookingIdStr);
         }
     }
 

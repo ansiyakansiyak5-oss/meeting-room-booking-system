@@ -114,8 +114,9 @@ public class AvailabilityServlet extends HttpServlet {
                         }
                     }
                 } catch (SQLException e) {
+                    System.err.println("[AvailabilityServlet] Database error: " + e.getMessage());
                     e.printStackTrace();
-                    request.setAttribute("error", "Database error: " + e.getMessage());
+                    request.setAttribute("error", "Unable to load room availability due to a database service error.");
                 }
             }
         }
